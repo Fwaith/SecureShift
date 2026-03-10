@@ -1,0 +1,4 @@
+# Should not be commited, pyc files are bytecode, and so can't be diffed like normal text files
+# They are automatically compiled when the program is run
+# Commiting them leads to commiting loads of unnecessary files that will change with every commit
+*.pyc
