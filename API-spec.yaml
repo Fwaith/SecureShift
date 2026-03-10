@@ -1,3 +1,5 @@
+# Use: goto https://editor.swagger.io/, and paste in this file to view documentation in a pretty way
+
 openapi: 3.0.3
 info:
   title: Neighbourhood Reports API
