@@ -21,7 +21,7 @@ services:
         value: 3.12.9
       - key: DATABASE_URL
         fromDatabase:
-          name: secureshift-db
+          name: secureshift-database
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
