@@ -1,0 +1,398 @@
+openapi: 3.0.3
+info:
+  title: Neighbourhood Reports API
+  version: 1.0.0
+  description: Community reporting API
+
+servers:
+  - url: /api/v1
+
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_token
+
+  schemas:
+
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: INVALID_CREDENTIALS
+        message:
+          type: string
+          example: Email or password incorrect
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - phoneNumber
+        - postcode
+        - password
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        postcode:
+          type: string
+          example: B76
+        password:
+          type: string
+          minLength: 8
+
+    OTPVerifyRequest:
+      type: object
+      required: [email, otp]
+      properties:
+        email:
+          type: string
+        otp:
+          type: string
+          example: "123456"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    CreateReportRequest:
+      type: object
+      required: [neighbourhoodId, title, description]
+      properties:
+        neighbourhoodId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+
+    VoteRequest:
+      type: object
+      required: [reportId]
+      properties:
+        reportId:
+          type: integer
+
+    CreateCommentRequest:
+      type: object
+      required: [reportId, description]
+      properties:
+        reportId:
+          type: integer
+        description:
+          type: string
+        replyToCommentId:
+          type: integer
+          nullable: true
+
+    Comment:
+      type: object
+      properties:
+        commentId:
+          type: integer
+        reportId:
+          type: integer
+        username:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: integer
+          description: Epoch timestamp
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    Report:
+      type: object
+      properties:
+        reportId:
+          type: integer
+        neighbourhoodId:
+          type: integer
+        username:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, resolved]
+        voteCount:
+          type: integer
+        createdAt:
+          type: integer
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    Neighbourhood:
+      type: object
+      properties:
+        neighbourhoodId:
+          type: integer
+        postcode:
+          type: string
+
+paths:
+
+  /auth/register:
+    post:
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          description: Duplicate credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP and activate account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPVerifyRequest'
+      responses:
+        "200":
+          description: Account verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login success (cookie set)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: Logout
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Logout success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /users/me:
+    get:
+      summary: Get authentication status
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Logged in user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                  username:
+                    type: string
+                  email:
+                    type: string
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reports:
+    get:
+      summary: Get reports by neighbourhood
+      parameters:
+        - name: neighbourhoodId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Report'
+
+    post:
+      summary: Create report
+      security:
+        - SessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReportRequest'
+      responses:
+        "200":
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /reports/{reportId}:
+    get:
+      summary: Get report by ID
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reports/upvote:
+    post:
+      summary: Upvote report
+      security:
+        - SessionCookie: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoteRequest'
+      responses:
+        "200":
+          description: Vote added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /reports/upvote/remove:
+    post:
+      summary: Remove upvote
+      security:
+        - SessionCookie: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoteRequest'
+      responses:
+        "200":
+          description: Vote removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /comments:
+    post:
+      summary: Add comment to report
+      security:
+        - SessionCookie: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        "200":
+          description: Comment added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /neighbourhoods:
+    get:
+      summary: Get neighbourhood list
+      responses:
+        "200":
+          description: List of neighbourhoods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Neighbourhood'
