@@ -6,6 +6,9 @@
 - connect to repo
 - render.yaml acts as the blueprint
 
+## To-do
+[Issue board](https://git.cs.bham.ac.uk/software-engineering-2025-26/AlgorithmAlliance/-/boards)
+
 ## Note
 
 **build.sh:**
