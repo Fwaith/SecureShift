@@ -124,3 +124,22 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
+# Phoebe Added#
+# Loads the models, migrations, commands etc. of the apps
+INSTALLED_APPS = [
+    "django.contrib.admin",         # for secureshift/urls.py
+    "django.contrib.auth",          # for secureshift/urls.py
+    "django.contrib.contenttypes",  # model relations
+    "django.contrib.sessions",      # can prevent same user having multiple active sessions
+    "django.contrib.messages",      # displays one time message to user
+    "django.contrib.staticfiles",   # collects files from the apps
+
+    "accounts",
+    "habitability",
+    "reports",
+    "forecast",
+
+    "django_extensions",            # to generate database diagram of models
+]
