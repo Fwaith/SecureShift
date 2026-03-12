@@ -9,16 +9,16 @@ import AuthorityView from '../views/AuthorityView.vue'
 import AccessibilityView from '../views/AccessibilityView.vue'
 
 const routes = [
-    { path: '/', name: 'home', component: HomeView },
+    { path: '/', redirect: '/login' },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
+    { path: '/home', name: 'home', component: HomeView },
     { path: '/reports', name: 'reports', component: ReportsView },
     { path: '/map', name: 'map', component: MapView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/authority', name: 'authority', component: AuthorityView },
     { path: '/accessibility', name: 'accessibility', component: AccessibilityView },
-    { path: '/:pathMatch(.*)*', redirect: '/' }
-
+    { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
 const router = createRouter({
@@ -27,3 +27,4 @@ const router = createRouter({
 })
 
 export default router
+

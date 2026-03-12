@@ -117,10 +117,8 @@ const handleLogin = async () => {
 .login-card {
     width: 420px;
     padding: 40px;
-
     background: white;
     border-radius: 20px;
-
     box-shadow: 0 15px 40px rgba(0,0,0,0.12);
 }
 
@@ -158,13 +156,10 @@ input {
 button {
     margin-top: 10px;
     padding: 14px;
-
     border: none;
     border-radius: 10px;
-
     background: #4f46e5;
     color: white;
-
     font-weight: 600;
     cursor: pointer;
 }
