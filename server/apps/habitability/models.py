@@ -71,8 +71,11 @@ class HabitabilityScores(models.Model):
         output_field= models.FloatField(),
         db_persist=True     # saves values into a new column
     )
-
-    # Calculate habitability score from values when needed 
+    overall_score = models.GeneratedField(
+        expression = (F('economy_score')*0.30) + (F('environment_score')*0.20) + (F('infrastructure_score')*0.30) + (F('security_score')*0.20),
+        output_field= models.FloatField(),
+        db_persist=True     # saves values into a new column
+    )
  
     # For our use/ testing
     def __str__(self):
