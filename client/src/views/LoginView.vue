@@ -92,7 +92,7 @@ const handleLogin = async () => {
         await userRes.json()
 
         success.value = 'Login successful! Redirecting...'
-        setTimeout(() => router.push('/'), 800)
+        setTimeout(() => router.push('/home'), 800)
   } catch (err) {
     error.value = err.message || 'Login failed. Please try again.'
   } finally {
