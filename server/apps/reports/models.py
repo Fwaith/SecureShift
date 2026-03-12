@@ -12,5 +12,5 @@ class Comments(models.Model):
 
     # For our use/ testing
     def __str__(self):
-        return f"Comment(self.commentID)"
+        return f"Comment{self.comment_id}"
         '''

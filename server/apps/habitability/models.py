@@ -4,7 +4,6 @@ from django.db.models import F     # refers to model field value directly in dat
 class Region(models.Model):
     region_id = models.AutoField(primary_key=True)
     region_name = models.CharField(max_length=20)
-    # Calculate habitability score from values when needed 
 
     # For our use/ testing
         # shows the value rather than just the object
@@ -12,22 +11,20 @@ class Region(models.Model):
         return self.region_name
 
 
-class Neighbourhood(models.Model):
-    neighbourhood_id = models.AutoField(primary_key=True)
-    region = models.ForeignKey("Region", on_delete=models.CASCADE, related_name="neighbourhoods")
-    county = models.CharField(max_length=100)
-    postcode = models.CharField(max_length=7)
+class Neighborhood(models.Model):
+    neighborhood_id = models.AutoField(primary_key=True)
+    region = models.ForeignKey("Region", on_delete=models.CASCADE, related_name="neighborhoods", null=True, blank=True)  # 1-Many relationship with neighborhoods
+    neighborhood_name = models.CharField(max_length=100, unique=True)
+    postcode = models.CharField(max_length=7, null=True, blank=True)
 
     # For our use/ testing
     def __str__(self):
-        return self.postcode
+        return self.neighborhood_name
 class HabitabilityScores(models.Model):
 
     score_id = models.AutoField(primary_key=True)
 
-    #neighbourhood = models.ForeignKey("Neighbourhood", on_delete=models.CASCADE)
-
-    county = models.CharField(max_length=100, unique=True)
+    neighborhood = models.OneToOneField("Neighborhood", on_delete=models.CASCADE, related_name="habitability_score", null=True, blank=True) #1-1 relationship with HabitabilityScores
     
     employment_rate = models.FloatField()
     income = models.FloatField()
@@ -75,10 +72,10 @@ class HabitabilityScores(models.Model):
         db_persist=True     # saves values into a new column
     )
 
-
+    # Calculate habitability score from values when needed 
  
     # For our use/ testing
     def __str__(self):
-        return self.county
+        return self.neighborhood.neighborhood_name if self.neighborhood else f"Score {self.score_id}"
     
 
