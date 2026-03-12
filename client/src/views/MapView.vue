@@ -1,14 +1,16 @@
 <template>
     <div class="map-page">
-        <l-map
-            v-model:zoom="zoom"
-            :center="center"
-            class="leaflet-map"
-        >
+        <l-map v-model:zoom="zoom" :center="center" class="leaflet-map">
         <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
         />
+
+        <l-marker :lat-lng="[52.48, -1.89]">
+            <l-popup>
+                Flood reported in Birmingham
+            </l-popup>
+        </l-marker>
         </l-map>
     </div>
 </template>
