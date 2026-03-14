@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from accounts.views import update_user
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/users/me/update', update_user, name='update_user'),
 ]
