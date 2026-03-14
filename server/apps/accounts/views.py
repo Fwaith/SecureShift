@@ -54,7 +54,7 @@ def update_user(request):
 
     errors = {}
 
-    # --- Username ---
+    #Username
     new_username = data.get("username")
     if new_username is not None:
         new_username = new_username.strip()
@@ -69,7 +69,7 @@ def update_user(request):
         else:
             user.username = new_username
 
-    # --- Email ---
+    #Email
     new_email = data.get("email")
     if new_email is not None:
         new_email = new_email.strip().lower()
@@ -84,17 +84,17 @@ def update_user(request):
         else:
             user.email = new_email
 
-    # --- Phone number ---
+    #Phone number
     new_phone = data.get("phoneNumber")
     if new_phone is not None:
         user.phone_number = new_phone.strip()
 
-    # --- Postcode ---
+    #Postcode
     new_postcode = data.get("postcode")
     if new_postcode is not None:
         user.postcode = new_postcode.strip().upper()
 
-    # --- Password ---
+    #Password
     new_password = data.get("password")
     if new_password is not None:
         current_password = data.get("currentPassword")
