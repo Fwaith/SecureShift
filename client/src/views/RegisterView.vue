@@ -35,33 +35,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Date of Birth</label>
-                    <div class="dob-row">
-                        <select v-model="form.dobDay" required>
-                            <option v-for="day in days" :key="day" :value="day">{{ day }}</option>
-                        </select>
-
-                        <select v-model="form.dobMonth" required>
-                            <option v-for="month in months" :key="month" :value="month">{{ month }}</option>
-                        </select>
-
-                        <select v-model="form.dobYear" required>
-                            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="gender">Gender</label>
-                    <select id="gender" v-model="form.gender" required>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label>Phone Number</label>
                     <div class="phone-row">
                         <select v-model="form.phoneCode" required>
@@ -76,15 +49,9 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Postcode</label>
-                        <input v-model="form.postcode" type="text" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Recovery Email (optional)</label>
-                        <input v-model="form.recoveryEmail" type="email" />
-                    </div>
+                <div class="form-group">
+                    <label>Postcode</label>
+                    <input v-model="form.postcode" type="text" required />
                 </div>
 
                 <div class="section-title">Account Details</div>
@@ -184,14 +151,9 @@ const router = useRouter()
 const form = ref({
     firstName: '',
     lastName: '',
-    dobDay: '1',
-    dobMonth: '1',
-    dobYear: new Date().getFullYear().toString(),
-    gender: 'Male',
     phoneCode: '+1',
     phoneNumber: '',
     postcode: '',
-    recoveryEmail: '',
     username: '',
     email: '',
     password: '',
@@ -205,15 +167,9 @@ const error = ref('')
 const success = ref('')
 const showPassword = ref(false)
 
-const days = Array.from({ length: 31 }, (_, i) => String(i + 1))
-const months = Array.from({ length: 12 }, (_, i) => String(i + 1))
-const years = Array.from(
-    { length: new Date().getFullYear() - 1900 + 1 },
-    (_, i) => String(new Date().getFullYear() - i)
-)
 const countryCodes = ['+44', '+60', '+65', '+1', '+61', '+91', '+86']
 
-const API = `${import.meta.env.VITE_API_URL}/api/v1`
+const API = `${import.meta.env.VITE_API_URL}/api/v1` 
 
 const handleRegister = async () => {
     error.value = ''
@@ -382,14 +338,9 @@ const goBackToRegister = () => {
     color: #334155;
 }
 
-.dob-row,
 .phone-row {
     display: flex;
     gap: 10px;
-}
-
-.dob-row select {
-    flex: 1;
 }
 
 .phone-row select {
@@ -512,7 +463,6 @@ button:disabled {
         gap: 18px;
     }
 
-    .dob-row,
     .phone-row {
         flex-direction: column;
     }
