@@ -1,26 +1,31 @@
 <template>
     <div class="map-page">
         <div class="map-container">
-            <l-map ref="mapRef" v-model:zoom="zoom" :center="center" class="leaflet-map">
+            <l-map 
+                ref="mapRef"
+                v-model:zoom="zoom" 
+                :center="center" 
+                class="leaflet-map"
+            >
                 <l-tile-layer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="&copy; OpenStreetMap contributors"
                 />
 
                 <l-marker
-                    v-for="report in reports"
+                    v-for="report in filteredReports"
                     :key="report.id"
                     :lat-lng="[report.lat, report.lng]"
                     :icon="getIcon(report.type)"
-                    @click="openPopup(report)"
+                    @click="openPopup(report)"   
                 >
                     <l-popup :options="{ autoPan: true, closeButton: true }">
                         <div class="popup-card">
                             <h3>{{ report.type }}</h3>
-                            <p><strong>Location: </strong>{{ report.area }}</p>
-                            <p><strong>Severity: </strong>{{ report.severity }}</p>
-                            <p><strong>Status: </strong>{{ report.status }}</p>
-                            <p><strong>Votes: </strong>{{ report.votes }}</p>
+                            <p><strong>Location:</strong> {{ report.area }}</p>
+                            <p><strong>Severity:</strong> {{ report.severity }}</p>
+                            <p><strong>Status:</strong> {{ report.status }}</p>
+                            <p><strong>Votes:</strong> {{ report.votes }}</p>
                         </div>
                     </l-popup>
                 </l-marker>
@@ -29,28 +34,31 @@
 
         <div class="reports-section">
             <div class="reports-header">
-                <h2>community reports</h2>
+                <h2>Community Reports</h2>
+                
                 <div class="controls">
                     <input
                         v-model="searchTerm"
                         type="text"
-                        placeholder="Search by area or tight....""
+                        placeholder="Search by area or type..."
                         class="search-input"
                     />
-
+                    
                     <select v-model="filterType" class="filter-select">
-                            <optional value="">All Types</optional>
-                            <option v-for="type in disasterType" :key="type" :value="type">
-                                {{ type }}
-                            </option>
+                        <option value="">All Types</option>
+                        <option v-for="type in disasterTypes" :key="type" :value="type">
+                            {{ type }}
+                        </option>
                     </select>
+
                     <select v-model="sortBy" class="filter-select">
                         <option value="votes">Most Voted</option>
-                        <option value="recents">Most Recent</option>
+                        <option value="recent">Most Recent</option>
                     </select>
                 </div>
             </div>
-            <div class="reports-grid"
+
+            <div class="reports-grid">
                 <div 
                     v-for="report in filteredReports" 
                     :key="report.id"
@@ -83,51 +91,49 @@
                         {{ new Date(report.timestamp).toLocaleDateString() }}
                     </small>
                 </div>
+            </div>
+
+            <div v-if="resolvedReports.length" class="resolved-teaser">
+                <h3>Previously Resolved ({{ resolvedReports.length }})</h3>
+                <p>Click to view full archive →</p>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { devtools, ref } from "vue"
+import { ref, computed, onMounted } from "vue"
 import * as L from 'leaflet'
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet"
 import "leaflet/dist/leaflet.css"
 
 const zoom = ref(9)
-const center = ref([52.4862, -1.8904]) //birm west midlands
+const center = ref([52.4862, -1.8904])
+const mapRef = ref(null)
 
 const reports = ref([])
 
 const disasterTypes = [
-    'Flood',
-    'Wildfire',
-    'Storm Damage',
-    'Road blocked',
-    'Power Outage',
-    'Landslide',
-    'Infrastructure Damage'
+    'Flood', 'Wildfire', 'Storm Damage', 'Road blocked',
+    'Power Outage', 'Landslide', 'Infrastructure Damage'
 ]
 
 const areas = [
-    'Birmingham',
-    'Coventry',
-    'Wolverhampton',
-    'Dudley',
-    'Walsall',
-    'Solihull',
-    'Sandwell',
-    'West Bromwich'
+    'Birmingham', 'Coventry', 'Wolverhampton', 'Dudley',
+    'Walsall', 'Solihull', 'Sandwell', 'West Bromwich'
 ]
 
 const severities = ['Low', 'Medium', 'High']
 const statuses = ['Pending', 'In Progress', 'Resolved']
 
 const westMidlandsBounds = {
-    minLat: 52.2,
-    maxLat: 52.7,
-    minLng: -2.4,
-    maxLng: -1.3
+    minLat: 52.2, maxLat: 52.7,
+    minLng: -2.4, maxLng: -1.3
 }
+
+const searchTerm = ref('')
+const filterType = ref('')
+const sortBy = ref('votes')  
 
 function randomInRange(min, max) {
     return min + Math.random() * (max - min)
@@ -141,71 +147,82 @@ function generateReports() {
     reports.value = []
     for (let i = 0; i < 12; i++) {
         reports.value.push({
-        id: i + 1,
-        lat: randomInRange(westMidlandsBounds.minLat, westMidlandsBounds.maxLat),
-        lng: randomInRange(westMidlandsBounds.minLng, westMidlandsBounds.maxLng),
-        type: randomItem(disasterTypes),
-        area: randomItem(areas),
-        severity: randomItem(severities),
-        status: randomItem(statuses)
+            id: i + 1,
+            lat: randomInRange(westMidlandsBounds.minLat, westMidlandsBounds.maxLat),
+            lng: randomInRange(westMidlandsBounds.minLng, westMidlandsBounds.maxLng),
+            type: randomItem(disasterTypes),
+            area: randomItem(areas),
+            severity: randomItem(severities),
+            status: randomItem(statuses),
+            votes: Math.floor(Math.random() * 47) + 3,
+            timestamp: Date.now() - Math.random() * 1000000000   
         })
     }
 }
 
-const iconCache = {}
+const filteredReports = computed(() => {
+    let result = reports.value.filter(report => {
+        const matchesSearch = 
+            !searchTerm.value ||
+            report.area.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+            report.type.toLowerCase().includes(searchTerm.value.toLowerCase())
+        
+        const matchesType = !filterType.value || report.type === filterType.value
+        
+        return matchesSearch && matchesType
+    })
 
-function getIconColor(type) {
+    if (sortBy.value === 'votes') {
+        result.sort((a, b) => b.votes - a.votes)
+    } else {
+        result.sort((a, b) => b.timestamp - a.timestamp)
+    }
+
+    return result
+})
+
+const resolvedReports = computed(() => 
+    reports.value.filter(r => r.status === 'Resolved')
+)
+
+const iconCache = {}
+function getIconColor(type) { 
     switch(type) {
-        case 'Flood':
-            return '#2563eb'
-        case 'Wildfire':
-            return '#dc2626'
-        case 'Storm Damage':
-            return '#7c3aed'
-        case 'Road blocked':
-            return '#ea580c'
-        case 'Power Outage':
-            return '#ca8a04'
-        case 'Landslide':
-            return '#92400e'
-        case 'Infrastructure Damage':
-            return '#0f766e'
-        default:
-            return '#4f46e5'
+        case 'Flood': return '#2563eb'
+        case 'Wildfire': return '#dc2626'
+        case 'Storm Damage': return '#7c3aed'
+        case 'Road blocked': return '#ea580c'
+        case 'Power Outage': return '#ca8a04'
+        case 'Landslide': return '#92400e'
+        case 'Infrastructure Damage': return '#0f766e'
+        default: return '#4f46e5'
     }
 }
 
 function getIcon(type) {
     if (!iconCache[type]) {
         const color = getIconColor(type)
-
         iconCache[type] = L.divIcon({
             className: '',
-            html: `
-                <div style="
-                    width: 18px;
-                    height:18px;
-                    background: ${color};
-                    border: 3px solid white;
-                    border-radius: 50%;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-                "></div>
-            `,
+            html: `<div style="width:18px;height:18px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.35);"></div>`,
             iconSize: [18, 18],
-            iconAnchor: [9,9],
+            iconAnchor: [9, 9],
             popupAnchor: [0, -10]
         })
     }
-
     return iconCache[type]
 }
 
-function zoomToReport(report) {
-    center.value = [report.lat, report.lng]
-    zoom.value = 13
+function openPopup(report) {
 }
 
-generateReports()
+function upvote(report) {
+    report.votes++
+}
+
+onMounted(() => {
+    generateReports()
+})
 </script>
 
 <style scoped>
