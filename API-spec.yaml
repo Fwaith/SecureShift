@@ -339,6 +339,10 @@ paths:
                     type: string
                   email:
                     type: string
+                  postcode:
+                    type: string
+                  phoneNumber:
+                    type: string
         "401":
           description: Not authenticated
           content:
