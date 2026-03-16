@@ -143,3 +143,7 @@ INSTALLED_APPS = [
 
     "django_extensions",            # to generate database diagram of models
 ]
+
+# Added by Charlie
+# Use custom user model defined in accounts/models.py instead of Django's default User model
+AUTH_USER_MODEL = 'accounts.User'

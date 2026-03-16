@@ -16,9 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from accounts.views import update_user
+from accounts.views import login, logout, register, update_user, verify_otp
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/auth/register', register, name='register'),
+    path('api/v1/auth/verify-otp', verify_otp, name='verify_otp'),
+    path('api/v1/auth/login', login, name='login'),
+    path('api/v1/auth/logout', logout, name='logout'),
     path('api/v1/users/me/update', update_user, name='update_user'),
 ]

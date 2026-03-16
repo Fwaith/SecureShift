@@ -1,12 +1,30 @@
 import json
+import random
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from .models import EmailOTP
+
 User = get_user_model()
 
+# Helpers
+def json_error(error, message, status=400):
+    return JsonResponse({"error": error, "message": message}, status=status)
+
+def parse_json(request: object):
+    try:
+        return json.loads(request.body), None
+    except (json.JSONDecodeError, ValueError):
+        return None, json_error("INVALID_JSON", "Request body must be valid JSON.")
+
+def generate_otp():
+    return f"{random.randint(0, 999999):06d}"
 
 def get_authenticated_user(request):
     """Helper: return User if session is valid, else None."""
@@ -18,6 +36,135 @@ def get_authenticated_user(request):
     except User.DoesNotExist:
         return None
 
+# Views
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def register(request):
+    """POST /api/v1/auth/register"""
+    data, error_response = parse_json(request)
+    if error_response:
+        return error_response
+
+    required_fields = ["username", "email", "phoneNumber", "postcode", "password"]
+    missing_fields = [field for field in required_fields if not str(data.get(field, "")).strip()]
+    if missing_fields:
+        return json_error("VALIDATION_ERROR", "All required fields must be provided.")
+
+    username = data["username"].strip()
+    email = data["email"].strip().lower()
+    phone_number = data["phoneNumber"].strip()
+    postcode = data["postcode"].strip().upper()
+    password = data["password"]
+
+    if len(password) < 8:
+        return json_error(
+            "VALIDATION_ERROR",
+            "Password must be at least 8 characters.",
+        )
+
+    if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
+        return json_error(
+            "DUPLICATE_CREDENTIALS",
+            "A user with the same username or email already exists.",
+            status=400,
+        )
+
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        # create_user will hash the password, so we can pass it directly
+        password=password,
+        is_active=False,
+        phone_number=phone_number,
+        postcode=postcode,
+    )
+
+    # Remove any existing OTPs for this user and create a new one
+    EmailOTP.objects.filter(user=user).delete()
+    EmailOTP.objects.create(
+        user=user,
+        otp=generate_otp()
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Registration successful. OTP sent to your email.",
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def verify_otp(request):
+    """POST /api/v1/auth/verify-otp"""
+    data, error_response = parse_json(request)
+    if error_response:
+        return error_response
+
+    email = str(data.get("email", "")).strip().lower()
+    otp = str(data.get("otp", "")).strip()
+    if not email or not otp:
+        return json_error("VALIDATION_ERROR", "Email and OTP are required.")
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return json_error("INVALID_OTP", "Invalid OTP or email.", status=400)
+
+    otp_record = (
+        EmailOTP.objects.filter(
+            user=user,
+            otp=otp,
+        )
+        .first()
+    )
+
+    if not otp_record:
+        return json_error("INVALID_OTP", "Invalid OTP or email.", status=400)
+
+    otp_record.delete()
+
+    # Equivalent to the verified field in Phoebe's plan, see apps/accounts/models.py for details
+    user.is_active = True
+    user.save(update_fields=["is_active"])
+
+    return JsonResponse({"success": True, "message": "Account verified successfully."})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def login(request):
+    """POST /api/v1/auth/login"""
+    data, error_response = parse_json(request)
+    if error_response:
+        return error_response
+
+    email = str(data.get("email", "")).strip().lower()
+    password = str(data.get("password", ""))
+    if not email or not password:
+        return json_error("INVALID_CREDENTIALS", "Email or password incorrect", status=401)
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return json_error("INVALID_CREDENTIALS", "Email or password incorrect", status=401)
+
+    if not user.is_active or not check_password(password, user.password):
+        return json_error("INVALID_CREDENTIALS", "Email or password incorrect", status=401)
+
+    request.session["user_id"] = user.pk
+    request.session.modified = True
+
+    response = JsonResponse({"success": True, "message": "Login successful."})
+    return response
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def logout(request):
+    """POST /api/v1/auth/logout"""
+    request.session.flush()
+    return JsonResponse({"success": True, "message": "Logout successful."})
 
 @csrf_exempt
 @require_http_methods(["POST"])
