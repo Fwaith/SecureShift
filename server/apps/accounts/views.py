@@ -283,3 +283,29 @@ def update_user(request):
             },
         }
     )
+    
+@csrf_exempt
+@require_http_methods(["GET"])
+def users_me(request):
+    """GET /api/v1/users/me"""
+    if "user_id" not in request.session:
+        return JsonResponse(
+            {"error": "NOT_AUTHENTICATED", "message": "You must be logged in to view your profile."},
+            status=401,
+        )
+    
+    user_id = request.session["user_id"]
+    
+    try:
+        user = User.objects.get(pk=user_id, is_active=True)
+    except User.DoesNotExist:
+        # Shouldn't happen, but JIC
+        return JsonResponse({"error": "NOT_AUTHENTICATED", "message": "You must be logged in to view your profile."}, status=401)
+        
+    return JsonResponse({
+            "userId": user.pk,
+            "username": user.username,
+            "email": user.email,
+            "phoneNumber": user.phone_number,
+            "postcode": user.postcode,
+        })
