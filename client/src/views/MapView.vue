@@ -123,6 +123,17 @@ const areas = [
     'Walsall', 'Solihull', 'Sandwell', 'West Bromwich'
 ]
 
+const areaCenters = {
+    'Birmingham':    [52.4862, -1.8904],
+    'Coventry':      [52.4082, -1.5105],
+    'Wolverhampton': [52.5860, -2.1290],
+    'Dudley':        [52.5084, -2.0877],
+    'Walsall':       [52.5853, -1.9825],
+    'Solihull':      [52.4141, -1.7750],
+    'Sandwell':      [52.5210, -1.9940],
+    'West Bromwich': [52.5210, -1.9940]
+}
+
 const severities = ['Low', 'Medium', 'High']
 const statuses = ['Pending', 'In Progress', 'Resolved']
 
@@ -146,16 +157,19 @@ function randomItem(array) {
 function generateReports() {
     reports.value = []
     for (let i = 0; i < 12; i++) {
+        const area = randomItem(areas)              
+        const [centerLat, centerLng] = areaCenters[area]
+        
         reports.value.push({
             id: i + 1,
-            lat: randomInRange(westMidlandsBounds.minLat, westMidlandsBounds.maxLat),
-            lng: randomInRange(westMidlandsBounds.minLng, westMidlandsBounds.maxLng),
+            lat: centerLat + randomInRange(-0.035, 0.035),   
+            lng: centerLng + randomInRange(-0.035, 0.035),
             type: randomItem(disasterTypes),
-            area: randomItem(areas),
+            area: area,                                    
             severity: randomItem(severities),
             status: randomItem(statuses),
             votes: Math.floor(Math.random() * 47) + 3,
-            timestamp: Date.now() - Math.random() * 1000000000   
+            timestamp: Date.now() - Math.random() * 1000000000
         })
     }
 }
