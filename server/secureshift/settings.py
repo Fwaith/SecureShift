@@ -152,6 +152,17 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'accounts.User'
 
 # Added by Charlie
-# TODO: replace with CORS_ALLOWED_ORIGINS = [ "https://example.com", ]
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
 # https://pypi.org/project/django-cors-headers/
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
