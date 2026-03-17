@@ -5,7 +5,6 @@ import RegisterView from '../views/RegisterView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import ForecastView from '../views/ForecastView.vue'
 import AuthorityView from '../views/AuthorityView.vue'
-import AccessibilityView from '../views/AccessibilityView.vue'
 
 const routes = [
     { path: '/', redirect: '/login' },
@@ -15,7 +14,6 @@ const routes = [
     { path: '/reports', name: 'reports', component: ReportsView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/authority', name: 'authority', component: AuthorityView },
-    { path: '/accessibility', name: 'accessibility', component: AccessibilityView },
     { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 

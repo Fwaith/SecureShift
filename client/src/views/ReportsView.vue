@@ -1,153 +1,110 @@
 <template>
-    <div class="report-page">
-        <header class="header">
-            <router-link to="/home" class="logo-text">
-                SecureShift
-            </router-link>
-            <nav class="nav">
-                <router-link to="/habitability" class="nav-link">Habitability Overview</router-link>
-                <router-link to="/reports" class="nav-link active">Report an Issue</router-link>
-                <router-link to="/historical" class="nav-link">Historical Data</router-link>
-                <router-link to="/forecast" class="nav-link">Forecast</router-link>
-            </nav>
-            <button @click="toggleAccessibilityMenu" class="accessibility-button">
-                Accessibility
-            </button>
-        </header>
-        
-        <div class="map-container">
-            <l-map 
-                ref="mapRef"
-                v-model:zoom="zoom" 
-                :center="center" 
-                class="leaflet-map"
-            >
-                <l-tile-layer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributors"
-                />
-
-                <l-marker
-                    v-for="report in filteredReports"
-                    :key="report.id"
-                    :lat-lng="[report.lat, report.lng]"
-                    :icon="getIcon(report.type)"
-                    @click="openPopup(report)"   
+  <AppLayout>
+      <div class="report-page">   
+            <div class="map-container">
+                <l-map 
+                    ref="mapRef"
+                    v-model:zoom="zoom" 
+                    :center="center" 
+                    class="leaflet-map"
                 >
-                    <l-popup :options="{ autoPan: true, closeButton: true }">
-                        <div class="popup-card">
-                            <h3>{{ report.type }}</h3>
-                            <p><strong>Location:</strong> {{ report.area }}</p>
-                            <p><strong>Severity:</strong> {{ report.severity }}</p>
-                            <p><strong>Status:</strong> {{ report.status }}</p>
-                            <p><strong>Votes:</strong> {{ report.votes }}</p>
-                        </div>
-                    </l-popup>
-                </l-marker>
-            </l-map>
-        </div>
-
-        <div class="reports-section">
-            <div class="reports-header">
-                <h2>Community Reports</h2>
-                
-                <div class="controls">
-                    <input
-                        v-model="searchTerm"
-                        type="text"
-                        placeholder="Search by area or type..."
-                        class="search-input"
+                    <l-tile-layer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; OpenStreetMap contributors"
                     />
-                    
-                    <select v-model="filterType" class="filter-select">
-                        <option value="">All Types</option>
-                        <option v-for="type in disasterTypes" :key="type" :value="type">
-                            {{ type }}
-                        </option>
-                    </select>
 
-                    <select v-model="sortBy" class="filter-select">
-                        <option value="votes">Most Voted</option>
-                        <option value="recent">Most Recent</option>
-                    </select>
-                </div>
+                    <l-marker
+                        v-for="report in filteredReports"
+                        :key="report.id"
+                        :lat-lng="[report.lat, report.lng]"
+                        :icon="getIcon(report.type)"
+                        @click="openPopup(report)"   
+                    >
+                        <l-popup :options="{ autoPan: true, closeButton: true }">
+                            <div class="popup-card">
+                                <h3>{{ report.type }}</h3>
+                                <p><strong>Location:</strong> {{ report.area }}</p>
+                                <p><strong>Severity:</strong> {{ report.severity }}</p>
+                                <p><strong>Status:</strong> {{ report.status }}</p>
+                                <p><strong>Votes:</strong> {{ report.votes }}</p>
+                            </div>
+                        </l-popup>
+                    </l-marker>
+                </l-map>
             </div>
 
-            <div class="reports-grid">
-                <div 
-                    v-for="report in filteredReports" 
-                    :key="report.id"
-                    class="report-card"
-                    @click="openPopup(report)"
-                >
-                    <div class="card-header">
-                        <span class="type-badge" :style="{ backgroundColor: getIconColor(report.type) }">
-                            {{ report.type }}
-                        </span>
-                        <span class="status-badge" :class="report.status.toLowerCase().replace(' ', '-')">
-                            {{ report.status }}
-                        </span>
-                    </div>
-
-                    <h4>{{ report.area }}</h4>
-                    <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
+            <div class="reports-section">
+                <div class="reports-header">
+                    <h2>Community Reports</h2>
                     
-                    <div class="vote-section">
-                        <button 
-                            class="vote-btn"
-                            @click.stop="upvote(report)"
-                        >
-                            ▲ Upvote
-                        </button>
-                        <span class="vote-count">{{ report.votes }} votes</span>
+                    <div class="controls">
+                        <input
+                            v-model="searchTerm"
+                            type="text"
+                            placeholder="Search by area or type..."
+                            class="search-input"
+                        />
+                        
+                        <select v-model="filterType" class="filter-select">
+                            <option value="">All Types</option>
+                            <option v-for="type in disasterTypes" :key="type" :value="type">
+                                {{ type }}
+                            </option>
+                        </select>
+
+                        <select v-model="sortBy" class="filter-select">
+                            <option value="votes">Most Voted</option>
+                            <option value="recent">Most Recent</option>
+                        </select>
                     </div>
-
-                    <small class="timestamp">
-                        {{ new Date(report.timestamp).toLocaleDateString() }}
-                    </small>
                 </div>
-            </div>
 
-            <div v-if="resolvedReports.length" class="resolved-teaser">
-                <h3>Previously Resolved ({{ resolvedReports.length }})</h3>
-                <p>Click to view full archive →</p>
+                <div class="reports-grid">
+                    <div 
+                        v-for="report in filteredReports" 
+                        :key="report.id"
+                        class="report-card"
+                        @click="openPopup(report)"
+                    >
+                        <div class="card-header">
+                            <span class="type-badge" :style="{ backgroundColor: getIconColor(report.type) }">
+                                {{ report.type }}
+                            </span>
+                            <span class="status-badge" :class="report.status.toLowerCase().replace(' ', '-')">
+                                {{ report.status }}
+                            </span>
+                        </div>
+
+                        <h4>{{ report.area }}</h4>
+                        <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
+                        
+                        <div class="vote-section">
+                            <button 
+                                class="vote-btn"
+                                @click.stop="upvote(report)"
+                            >
+                                ▲ Upvote
+                            </button>
+                            <span class="vote-count">{{ report.votes }} votes</span>
+                        </div>
+
+                        <small class="timestamp">
+                            {{ new Date(report.timestamp).toLocaleDateString() }}
+                        </small>
+                    </div>
+                </div>
+
+                <div v-if="resolvedReports.length" class="resolved-teaser">
+                    <h3>Previously Resolved ({{ resolvedReports.length }})</h3>
+                    <p>Click to view full archive →</p>
+                </div>
             </div>
         </div>
-
-        <div v-if="showAccessibilityMenu" class="accessibility-modal" @click.self="toggleAccessibilityMenu">
-            <div class="modal-content">
-                <h3>Accessibility Settings</h3>
-                
-                <div class="setting">
-                    <label>Text Size</label>
-                    <input type="range" v-model="textSize" min="80" max="150" @input="applyAccessibility" />
-                    <span>{{ textSize }}%</span>
-                </div>
-
-                <div class="setting">
-                    <label>Dyslexic Font</label>
-                    <button @click="toggleDyslexicFont" class="toggle-btn">
-                        {{ useDyslexicFont ? 'ON' : 'OFF' }} (OpenDyslexic)
-                    </button>
-                </div>
-
-                <div class="setting">
-                    <label>Colour-blind Mode</label>
-                    <select v-model="colorMode" @change="applyAccessibility">
-                        <option value="normal">Normal</option>
-                        <option value="deuteranopia">Deuteranopia</option>
-                        <option value="protanopia">Protanopia</option>
-                        <option value="tritanopia">Tritanopia</option>
-                    </select>
-                </div>
-
-                <button @click="toggleAccessibilityMenu" class="close-btn">Close & Save</button>
-            </div>
-        </div>
-    </div>
+    </AppLayout>
 </template>
 
 <script setup>
+import AppLayout from "../components/AppLayout.vue"
 import { ref, computed, onMounted } from "vue"
 import * as L from 'leaflet'
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet"
@@ -159,15 +116,11 @@ const NEIGHBOURHOOD_ID = 1
 const zoom = ref(9)
 const center = ref([52.4862, -1.8904])
 const reports = ref([])
+const mapRef = ref(null)
 
 const searchTerm = ref('')
 const filterType = ref('')
 const sortBy = ref('votes')
-
-const showAccessibilityMenu = ref(false)
-const textSize = ref(100)
-const useDyslexicFont = ref(false)
-const colorMode = ref("normal")
 
 async function fetchReports() {
     try {
@@ -191,7 +144,6 @@ async function fetchReports() {
                 votes: r.voteCount || 0,
                 timestamp: r.createdAt * 1000 || Date.now()
             }))
-            console.log
             return
         }
     } catch (err) {
@@ -304,22 +256,6 @@ function getIcon(type) {
     return iconCache[type]
 }
 
-function openPopup(report) {}
-
-function toggleAccessibilityMenu() {
-    showAccessibilityMenu.value = !showAccessibilityMenu.value
-}
-function toggleDyslexicFont() {
-    useDyslexicFont.value = !useDyslexicFont.value
-    applyAccessibility()
-}
-function applyAccessibility() {
-    document.documentElement.style.fontSize = `${textSize.value}%`
-    document.documentElement.style.fontFamily = useDyslexicFont.value 
-        ? "'OpenDyslexic', sans-serif" 
-        : "system-ui, sans-serif"
-}
-
 onMounted(() => {
     fetchReports()
 })
@@ -336,96 +272,6 @@ onMounted(() => {
     position: sticky;
     top: 0;
     z-index: 10;
-}
-
-.logo-text {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1e293b;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.logo-text:hover {
-    color: #3b82f6;
-}
-
-.nav {
-    display: flex;
-    gap: 24px;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: #475569;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.nav-link:hover,
-.nav-link.active {
-    color: #3b82f6;
-}
-
-.accessibility-button {
-    background: #64748b;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 9999px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.accessibility-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
-}
-
-.modal-content {
-    background: white;
-    padding: 32px;
-    border-radius: 16px;
-    max-width: 420px;
-    width: 100%;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    z-index: 100000;
-}
-
-.setting {
-    margin-bottom: 24px;
-}
-
-.setting label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.toggle-btn, select {
-    padding: 10px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-    width: 100%;
-}
-
-.close-btn {
-    width: 100%;
-    padding: 14px;
-    background: #1e40af;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    margin-top: 16px;
-    font-weight: 600;
 }
 
 .report-page {

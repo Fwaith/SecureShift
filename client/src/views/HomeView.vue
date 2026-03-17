@@ -1,134 +1,82 @@
 <template>
-    <div class="home-page">
-        <header class="header">
-            <div class="logo">
-                <span class="logo-text">SecureShift</span>
-            </div>
-
-            <nav class="nav">
-                <router-link to="/habitability" class="nav-link">Habitability Overview</router-link>
-                <router-link to="/reports" class="nav-link">Report an Issue</router-link>
-                <router-link to="/historical" class="nav-link">Historical Data</router-link>
-                <router-link to="/forecast" class="nav-link">Forecast</router-link>
-            </nav>
-
-            <button @click="toggleAccessibilityMenu" class="accessibility-button">
-                Accessibility
-            </button>
-        </header>
-
-        <section class="hero">
-            <div class="hero-content">
-                <h1>Know Your Area. <br>Protect you community.</h1>
-                <p class="subtitle">
-                    Real-time habitability scores ~ Community reporting ~ 
-                    Built for everyone (WCAG Level A compliant)
-                </p>
-                <div class="cta-buttons">
-                    <button @click="goToHabitability" class="btn-primary">
-                        Check Habitability Score
-                    </button>
-                    <button @click="goToReports" class="btn-secondary">
-                        Report an Issue Now
-                    </button>
-                </div>
-            </div>
-
-            <div class="score-card">
-                <h3>West Midlands</h3>
-                <div class="score-circle">
-                    <span class="score">74</span>
-                    <span class="label">/100</span>
-                </div>
-                <p class="score-detail">Moderate ~ Stable ~ 3 active reports</p>
-            </div>
-        </section>
-
-        <section class="features">
-            <h2>Core Features</h2>
-            <div class="features-grid">
-                <div class="feature-card" @click="goToHabitability">
-                    <h3>Habitability Overview</h3>
-                    <p>Interactive map with choropleth layers, comparison tool, and detailed metrics using the official formula.</p>
+    <AppLayout>
+        <div class="home-page">
+            <section class="hero">
+                <div class="hero-content">
+                    <h1>Know Your Area. <br>Protect you community.</h1>
+                    <p class="subtitle">
+                        Real-time habitability scores ~ Community reporting ~ 
+                        Built for everyone (WCAG Level A compliant)
+                    </p>
+                    <div class="cta-buttons">
+                        <button type="button" class="btn-primary">
+                            Check Habitability Score
+                        </button>
+                        <button @click="goToReports" class="btn-secondary">
+                            Report an Issue Now
+                        </button>
+                    </div>
                 </div>
 
-                <div class="feature-card" @click="goToReports">
-                    <h3>Report Issues</h3>
-                    <p>Map markers + searchable cards. Vote, track status (Pending/In Progress/Resolved).</p>
+                <div class="score-card">
+                    <h3>West Midlands</h3>
+                    <div class="score-circle">
+                        <span class="score">74</span>
+                        <span class="label">/100</span>
+                    </div>
+                    <p class="score-detail">Moderate ~ Stable ~ 3 active reports</p>
                 </div>
+            </section>
 
-                <div class="feature-card" @click="toggleAccessibilityMenu">
-                    <h3>Accessibility Settings</h3>
-                    <p>Colour-blind modes, dyslexic fonts (OpenDyslexic, Lexend), text size, keyboard navigation – persistent across the whole app.</p>
+            <section class="features">
+                <h2>Core Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Habitability Overview</h3>
+                        <p>Interactive map with choropleth layers, comparison tool, and detailed metrics using the official formula.</p>
+                    </div>
+
+                    <div class="feature-card" @click="goToReports">
+                        <h3>Report Issues</h3>
+                        <p>Map markers + searchable cards. Vote, track status (Pending/In Progress/Resolved).</p>
+                    </div>
+
+                    <div class="feature-card" @click="openAccessibility">
+                        <h3>Accessibility Settings</h3>
+                        <p>Colour-blind modes, dyslexic fonts (OpenDyslexic, Lexend), text size, keyboard navigation – persistent across the whole app.</p>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="recent-reports">
-            <h2>Latest Community Reports</h2>
-            <div class="reports-teaser">
-                <div v-for="(report, i) in recentReports" :key="i" class="teaser-card" @click="goToReports">
-                    <span class="type" :style="{ backgroundColor: getIconColor(report.type) }">
-                        {{ report.type }}
-                    </span>
-                    <span class="area">{{ report.area }}</span>
-                    <span class="votes">{{ report.votes }} votes</span>
+            <section class="recent-reports">
+                <h2>Latest Community Reports</h2>
+                <div class="reports-teaser">
+                    <div v-for="(report, i) in recentReports" :key="i" class="teaser-card" @click="goToReports">
+                        <span class="type" :style="{ backgroundColor: getIconColor(report.type) }">
+                            {{ report.type }}
+                        </span>
+                        <span class="area">{{ report.area }}</span>
+                        <span class="votes">{{ report.votes }} votes</span>
+                    </div>
                 </div>
-            </div>
-            <button @click="goToReports" class="view-all-btn">View All Reports →</button>
-        </section>
-
-        <footer class="footer">
-            <p>SecureShift Prototype ~ WCAG 2.0 Level A ~ Data from ONS, UK AIR, Police.uk & OpenStreetMap</p>
-        </footer>
-
-        <div v-if="showAccessibilityMenu" class="accessibility-modal" @click.self="toggleAccessibilityMenu">
-            <div class="modal-content">
-                <h3>Accessibility Settings</h3>
-                
-                <div class="setting">
-                    <label>Text Size</label>
-                    <input type="range" v-model="textSize" min="80" max="150" @input="applyAccessibility" />
-                    <span>{{ textSize }}%</span>
-                </div>
-
-                <div class="setting">
-                    <label>Dyslexic Font</label>
-                    <button @click="toggleDyslexicFont" class="toggle-btn">
-                        {{ useDyslexicFont ? 'ON' : 'OFF' }} (OpenDyslexic)
-                    </button>
-                </div>
-
-                <div class="setting">
-                    <label>Colour-blind Mode</label>
-                    <select v-model="colorMode" @change="applyAccessibility">
-                        <option value="normal">Normal</option>
-                        <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
-                        <option value="protanopia">Protanopia (Red-Blind)</option>
-                        <option value="tritanopia">Tritanopia (Blue-Blind)</option>
-                    </select>
-                </div>
-
-                <button @click="toggleAccessibilityMenu" class="close-btn">Close & Save</button>
-            </div>
+                <button @click="goToReports" class="view-all-btn">View All Reports →</button>
+            </section>
         </div>
-    </div>
+    </AppLayout>
 </template>
 
 <script setup>
+import AppLayout from "../components/AppLayout.vue"
 import { ref, onMounted } from "vue"
 import { useRouter } from 'vue-router'
+import { useAccessibility } from "../composables/useAccessibility"
 
 const recentReports = ref([])
 const router = useRouter()
+const { openAccessibility } = useAccessibility()
 
 const API = `${import.meta.env.VITE_API_URL}/api/v1`
 const NEIGHBOURHOOD_ID = 1
-
-const showAccessibilityMenu = ref(false)
-const textSize = ref(100)
-const useDyslexicFont = ref(false)
-const colorMode = ref("normal")
 
 async function loadRecentReports() {
     try {
@@ -153,23 +101,6 @@ onMounted(() => {
     loadRecentReports()
 })
 
-function toggleAccessibilityMenu() {
-    showAccessibilityMenu.value = !showAccessibilityMenu.value
-}
-function toggleDyslexicFont() {
-    useDyslexicFont.value = !useDyslexicFont.value
-    applyAccessibility()
-}
-
-function applyAccessibility() {
-    document.documentElement.style.fontSize = `${textSize.value}%`
-    if (useDyslexicFont.value) {
-        document.documentElement.style.fontFamily = "'OpenDyslexic', sans-serif"
-    } else {
-        document.documentElement.style.fontFamily = "system-ui, sans-serif"
-    }
-}
-
 function getIconColor(type) {
     const colors = {
         'Flood': '#2563eb',
@@ -182,7 +113,6 @@ function getIconColor(type) {
     }
     return colors[type] || '#4f46e5'
 }
-const goToHabitability = () => router.push('/habitability')
 const goToReports = () => router.push('/reports')
 </script>
 
@@ -191,53 +121,6 @@ const goToReports = () => router.push('/reports')
     min-height: 100vh;
     background: #f8fafc;
     font-family: system-ui, sans-serif;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.logo-icon { font-size: 2rem; }
-
-.nav {
-    display: flex;
-    gap: 24px;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: #475569;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.nav-link:hover { color: #3b82f6; }
-
-.accessibility-btn {
-    background: #64748b;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 9999px;
-    cursor: pointer;
-    font-weight: 600;
 }
 
 .hero {
@@ -392,59 +275,5 @@ const goToReports = () => router.push('/reports')
     padding: 12px 28px;
     border-radius: 9999px;
     cursor: pointer;
-}
-
-.footer {
-    text-align: center;
-    padding: 40px;
-    background: #1e293b;
-    color: #94a3b8;
-    font-size: 0.9rem;
-}
-
-.accessibility-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-}
-
-.modal-content {
-    background: white;
-    padding: 32px;
-    border-radius: 16px;
-    max-width: 420px;
-    width: 100%;
-}
-
-.setting {
-    margin-bottom: 24px;
-}
-
-.setting label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.toggle-btn, select {
-    padding: 10px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-}
-
-.close-btn {
-    width: 100%;
-    padding: 14px;
-    background: #1e40af;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    margin-top: 16px;
 }
 </style>
