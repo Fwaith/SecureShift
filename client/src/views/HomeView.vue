@@ -21,7 +21,7 @@
             <div class="hero-content">
                 <h1>Know Your Area. <br>Protect you community.</h1>
                 <p class="subtitle">
-                    Real-time habitability scores • Community reporting • 
+                    Real-time habitability scores ~ Community reporting ~ 
                     Built for everyone (WCAG Level A compliant)
                 </p>
                 <div class="cta-buttons">
@@ -40,13 +40,78 @@
                     <span class="score">74</span>
                     <span class="label">/100</span>
                 </div>
-                <p class="score-detail">Moderate • Stable • 3 active reports</p>
+                <p class="score-detail">Moderate ~ Stable ~ 3 active reports</p>
             </div>
         </section>
+
+        <section class="features">
+            <h2>Core Features</h2>
+            <div class="features-grid">
+                <div class="feature-card" @click="goToHabitability">
+                    <h3>Habitability Overview</h3>
+                    <p>Interactive map with choropleth layers, comparison tool, and detailed metrics using the official formula.</p>
+                </div>
+
+                <div class="feature-card" @click="goToReports">
+                    <h3>Report Issues</h3>
+                    <p>Map markers + searchable cards. Vote, track status (Pending/In Progress/Resolved).</p>
+                </div>
+
+                <div class="feature-card" @click="toggleAccessibilityMenu">
+                    <h3>Accessibility Settings</h3>
+                    <p>Colour-blind modes, dyslexic fonts (OpenDyslexic, Lexend), text size, keyboard navigation – persistent across the whole app.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="recent-reports">
+            <h2>Latest Community Reports</h2>
+            <div class="reports-teaser">
+                <div v-for="(report, i) in recentReports" :key="i" class="teaser-card" @click="goToReports">
+                    <span class="type" :style="{ backgroundColor: getIconColor(report.type) }">
+                        {{ report.type }}
+                    </span>
+                    <span class="area">{{ report.area }}</span>
+                    <span class="votes">{{ report.votes }} votes</span>
+                </div>
+            </div>
+            <button @click="goToReports" class="view-all-btn">View All Reports →</button>
+        </section>
+
         <footer class="footer">
-            <p>SecureShift Prototype • WCAG 2.0 Level A • Data from ONS, UK AIR, Police.uk & OpenStreetMap</p>
-            <p class="accessibility-note">Accessibility settings are saved globally for all users.</p>
+            <p>SecureShift Prototype ~ WCAG 2.0 Level A ~ Data from ONS, UK AIR, Police.uk & OpenStreetMap</p>
         </footer>
+
+        <div v-if="showAccessibilityMenu" class="accessibility-modal" @click.self="toggleAccessibilityMenu">
+            <div class="modal-content">
+                <h3>Accessibility Settings</h3>
+                
+                <div class="setting">
+                    <label>Text Size</label>
+                    <input type="range" v-model="textSize" min="80" max="150" @input="applyAccessibility" />
+                    <span>{{ textSize }}%</span>
+                </div>
+
+                <div class="setting">
+                    <label>Dyslexic Font</label>
+                    <button @click="toggleDyslexicFont" class="toggle-btn">
+                        {{ useDyslexicFont ? 'ON' : 'OFF' }} (OpenDyslexic)
+                    </button>
+                </div>
+
+                <div class="setting">
+                    <label>Colour-blind Mode</label>
+                    <select v-model="colorMode" @change="applyAccessibility">
+                        <option value="normal">Normal</option>
+                        <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
+                        <option value="protanopia">Protanopia (Red-Blind)</option>
+                        <option value="tritanopia">Tritanopia (Blue-Blind)</option>
+                    </select>
+                </div>
+
+                <button @click="toggleAccessibilityMenu" class="close-btn">Close & Save</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -67,6 +132,35 @@ const colorMode = ref("normal")
 function toggleAccessibilityMenu() {
     showAccessibilityMenu.value = !showAccessibilityMenu.value
 }
+function toggleDyslexicFont() {
+    useDyslexicFont.value = !useDyslexicFont.value
+    applyAccessibility()
+}
+
+function applyAccessibility() {
+    document.documentElement.style.fontSize = `${textSize.value}%`
+    if (useDyslexicFont.value) {
+        document.documentElement.style.fontFamily = "'OpenDyslexic', sans-serif"
+    } else {
+        document.documentElement.style.fontFamily = "system-ui, sans-serif"
+    }
+}
+
+function getIconColor(type) {
+    const colors = {
+        'Flood': '#2563eb',
+        'Wildfire': '#dc2626',
+        'Storm Damage': '#7c3aed',
+        'Road blocked': '#ea580c',
+        'Power Outage': '#ca8a04',
+        'Landslide': '#92400e',
+        'Infrastructure Damage': '#0f766e'
+    }
+    return colors[type] || '#4f46e5'
+}
+
+const goToHabitability = () => alert("→ Habitability Overview (Feature 3) would open here")
+const goToReports = () => alert("→ Resident Reporting Centre (Feature 6) would open here – your MapView.vue")
 </script>
 
 <style scoped>
@@ -96,6 +190,8 @@ function toggleAccessibilityMenu() {
     font-weight: 700;
     color: #1e293b;
 }
+
+.logo-icon { font-size: 2rem; }
 
 .nav {
     display: flex;
@@ -199,6 +295,82 @@ function toggleAccessibilityMenu() {
     color: #64748b;
 }
 
+.features {
+    padding: 60px 40px;
+    background: white;
+}
+
+.features h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #1e293b;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.feature-card {
+    background: #f8fafc;
+    padding: 32px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.feature-card .icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.recent-reports {
+    padding: 60px 40px;
+    background: #f8fafc;
+}
+
+.reports-teaser {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.teaser-card {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    cursor: pointer;
+}
+
+.type {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.view-all-btn {
+    margin-top: 24px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 9999px;
+    cursor: pointer;
+}
+
 .footer {
     text-align: center;
     padding: 40px;
@@ -207,9 +379,49 @@ function toggleAccessibilityMenu() {
     font-size: 0.9rem;
 }
 
-.accessibility-note {
-    margin-top: 8px;
-    font-size: 0.85rem;
-    opacity: 0.8;
+.accessibility-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    max-width: 420px;
+    width: 100%;
+}
+
+.setting {
+    margin-bottom: 24px;
+}
+
+.setting label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.toggle-btn, select {
+    padding: 10px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.close-btn {
+    width: 100%;
+    padding: 14px;
+    background: #1e40af;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 16px;
 }
 </style>
