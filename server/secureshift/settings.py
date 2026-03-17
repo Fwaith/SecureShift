@@ -49,6 +49,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -142,8 +144,25 @@ INSTALLED_APPS = [
     "forecast",
 
     "django_extensions",            # to generate database diagram of models
+    "corsheaders",
 ]
 
 # Added by Charlie
 # Use custom user model defined in accounts/models.py instead of Django's default User model
 AUTH_USER_MODEL = 'accounts.User'
+
+# Added by Charlie
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+# https://pypi.org/project/django-cors-headers/
+# CORS_ALLOW_ALL_ORIGINS = True
