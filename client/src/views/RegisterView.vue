@@ -128,6 +128,7 @@ const API = `${import.meta.env.VITE_API_URL}/api/v1`
 const handleRegister = async () => {
     error.value = ''
     success.value = ''
+    loading.value = true
 
     const registerData = {
         username: form.value.username,
@@ -138,6 +139,7 @@ const handleRegister = async () => {
     }
 
     try {
+        console.log('sending registration data: ', registerData)
         const res = await fetch(`${API}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -146,12 +148,14 @@ const handleRegister = async () => {
         })
 
         const data = await res.json().catch(() => ({}))
+        console.log('Response from backend: ', data)
         if (!res.ok) throw new Error(data.message || 'Registration failed')
         
         success.value = 'Registration successful. OTP sent to your email.'
         showOTPForm.value = true
     } catch (err) {
-        error.value = err.message
+        console.error('Registration error: ', err)
+        error.value = err.message || 'Registration failed. Please check if backend is running.'
     } finally {
         loading.value = false
     }
