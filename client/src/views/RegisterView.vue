@@ -8,30 +8,14 @@
             </div>
 
             <form v-if="!showOTPForm" @submit.prevent="handleRegister" class="register-form">
-                <div class="section-title">Personal Details</div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input v-model="form.username" type="text" required />
+                </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="firstName">First Name</label>
-                        <input
-                            id="firstName"
-                            v-model.trim="form.firstName"
-                            type="text"
-                            placeholder="Your first name"
-                            required
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="lastName">Last Name</label>
-                        <input
-                            id="lastName"
-                            v-model.trim="form.lastName"
-                            type="text"
-                            placeholder="Your last name"
-                            required
-                        />
-                    </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input v-model="form.email" type="email" required />
                 </div>
 
                 <div class="form-group">
@@ -54,43 +38,16 @@
                     <input v-model="form.postcode" type="text" required />
                 </div>
 
-                <div class="section-title">Account Details</div>
-
-                <div class="form-row">
                 <div class="form-group">
-                    <label>Username</label>
-                    <input v-model="form.username" type="text" required />
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input v-model="form.email" type="email" required />
-                </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input
-                            id="password"
-                            v-model="form.password"
-                            :type="showPassword ? 'text' : 'password'"
-                            placeholder="Minimum 8 characters"
-                            minlength="8"
-                            required
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input
-                            id="confirmPassword"
-                            v-model="form.confirmPassword"
-                            :type="showPassword ? 'text' : 'password'"
-                            placeholder="Re-enter password"
-                            minlength="8"
-                            required
-                        />
-                    </div>
+                    <label for="password">Password</label>
+                    <input
+                        id="password"
+                        v-model="form.password"
+                        :type="showPassword ? 'text' : 'password'"
+                        placeholder="Minimum 8 characters"
+                        minlength="8"
+                        required
+                    />
                 </div>
 
                 <div class="checkbox-group">
@@ -149,15 +106,12 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const form = ref({
-    firstName: '',
-    lastName: '',
-    phoneCode: '+1',
-    phoneNumber: '',
-    postcode: '',
     username: '',
     email: '',
-    password: '',
-    confirmPassword: ''
+    phoneCode: '+44',
+    phoneNumber: '',
+    postcode: '',
+    password: ''
 })
 
 const otp = ref('')
@@ -175,49 +129,32 @@ const handleRegister = async () => {
     error.value = ''
     success.value = ''
 
-    if (form.value.password !== form.value.confirmPassword) {
-        error.value = 'Passwords do not match.'
-        return
+    const registerData = {
+        username: form.value.username,
+        email: form.value.email,
+        phoneNumber: `${form.value.phoneCode}${form.value.phoneNumber}`,
+        postcode: form.value.postcode,
+        password: form.value.password
     }
 
-  loading.value = true
-
-  const registerData = {
-    username: form.value.username,
-    email: form.value.email,
-    phoneNumber: `${form.value.phoneCode}${form.value.phoneNumber}`,
-    postcode: form.value.postcode,
-    password: form.value.password
-  }
-
-  try {
-    const res = await fetch(`${API}/auth/register`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(registerData),
-        credentials: 'include'
-    })
-
-    let data = {}
     try {
-        data = await res.json()
-    } catch {
-        data = {}
-    }
+        const res = await fetch(`${API}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(registerData),
+            credentials: 'include'
+        })
 
-    if (!res.ok) {
-        throw new Error(data.message || 'Registration failed.')
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.message || 'Registration failed')
+        
+        success.value = 'Registration successful. OTP sent to your email.'
+        showOTPForm.value = true
+    } catch (err) {
+        error.value = err.message
+    } finally {
+        loading.value = false
     }
-
-    success.value = 'Registration successful. OTP sent to your email.'
-    showOTPForm.value = true
-} catch (err) {
-    error.value = err.message || 'Registration failed. Please try again.'
-} finally {
-    loading.value = false
-}
 }
 
 const handleVerifyOTP = async () => {

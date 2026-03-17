@@ -117,17 +117,41 @@
 
 <script setup>
 import { ref, onMounted } from "vue"
+import { useRouter } from 'vue-router'
 
-const recentReports = ref([
-    { type: "Flood", area: "Birmingham", votes: 23 },
-    { type: "Road blocked", area: "Coventry", votes: 15 },
-    { type: "Power Outage", area: "Wolverhampton", votes: 9 }
-])
+const recentReports = ref([])
+const router = useRouter()
+
+const API = `${import.meta.env.VITE_API_URL}/api/v1`
+const NEIGHBOURHOOD_ID = 1
 
 const showAccessibilityMenu = ref(false)
 const textSize = ref(100)
 const useDyslexicFont = ref(false)
 const colorMode = ref("normal")
+
+async function loadRecentReports() {
+    try {
+        const res = await fetch(`${API}/reports?neighbourhoodId=${NEIGHBOURHOOD_ID}`, {credentials: 'include'})
+        if (!res.ok) throw new Error()
+        let data = await res.json()
+        recentReports.value = data.slice(0, 3).map(r => ({
+            type: r.title || 'Community Report', 
+            area: 'West Midlands', 
+            votes: r.voteCount || 0
+        }))
+    } catch {
+        recentReports.value = [
+            { type: "Flood", area: "Birmingham", votes: 23 },
+            { type: "Road blocked", area: "Coventry", votes: 15 },
+            { type: "Power Outage", area: "Wolverhampton", votes: 9 }
+        ]
+    }
+}
+
+onMounted(() => {
+    loadRecentReports()
+})
 
 function toggleAccessibilityMenu() {
     showAccessibilityMenu.value = !showAccessibilityMenu.value
@@ -158,9 +182,8 @@ function getIconColor(type) {
     }
     return colors[type] || '#4f46e5'
 }
-
-const goToHabitability = () => alert("→ Habitability Overview (Feature 3) would open here")
-const goToReports = () => alert("→ Resident Reporting Centre (Feature 6) would open here – your MapView.vue")
+const goToHabitability = () => router.push('/habitability')
+const goToReports = () => router.push('/reports')
 </script>
 
 <style scoped>
