@@ -152,21 +152,8 @@ async function fetchReports() {
     generateReports()
 }
 
-async function upvote(report) {
-    try {
-        const res = await fetch(`${API}/reports/upvote`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reportId: report.id }),
-            credentials: 'include'
-        })
-        if (res.ok) {
-            report.votes++
-            console.log('vote saved to backend')
-        }
-    } catch (err) {
-        alert('Please log in to vote (session required)')
-    }
+function upvote(report) {
+    report.votes++
 }
 
 //demo data
