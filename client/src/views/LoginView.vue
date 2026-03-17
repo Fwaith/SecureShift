@@ -61,6 +61,7 @@ const error = ref('')
 const success = ref('')
 
 const API = `${import.meta.env.VITE_API_URL}/api/v1`
+console.log('API: ', API)
 
 const handleLogin = async () => {
     error.value = ''
@@ -76,20 +77,23 @@ const handleLogin = async () => {
             body: JSON.stringify(form.value),
             credentials: 'include'
         })
+        
+        const data = await res.json().catch(() => ({}))
 
         if (!res.ok) {
-            throw new Error('Invalid email or password')
-        }
+            throw new Error(data.message || 'Invalid email or password')
+            }
 
         const userRes = await fetch(`${API}/users/me`, {
+            method: 'GET',
             credentials: 'include'
         })
 
-        if (!userRes.ok) {
-            throw new Error('Could not load user details')
-        }
+        const userData = await userRes.json().catch(() => ({}))
 
-        await userRes.json()
+        if (!userRes.ok) {
+            throw new Error(userData.message || 'Could not load user details')
+            }
 
         success.value = 'Login successful! Redirecting...'
         setTimeout(() => router.push('/home'), 800)
