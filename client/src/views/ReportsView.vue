@@ -17,8 +17,7 @@
                         v-for="report in filteredReports"
                         :key="report.id"
                         :lat-lng="[report.lat, report.lng]"
-                        :icon="getIcon(report.type)"
-                        @click="openPopup(report)"   
+                        :icon="getIcon(report.type)" 
                     >
                         <l-popup :options="{ autoPan: true, closeButton: true }">
                             <div class="popup-card">
