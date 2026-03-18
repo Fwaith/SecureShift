@@ -59,9 +59,9 @@ def register(request):
     email = data["email"].strip().lower()
     phone_number = data["phoneNumber"].strip()
     postcode = data["postcode"].strip().upper()
-    password = data["password"]
+    user_password = data["password"]
 
-    if len(password) < 8:
+    if len(user_password) < 8:
         return json_error(
             "VALIDATION_ERROR",
             "Password must be at least 8 characters.",
@@ -78,7 +78,7 @@ def register(request):
         username=username,
         email=email,
         # create_user will hash the password, so we can pass it directly
-        password=password,
+        password=user_password,
         is_active=False,
         phone_number=phone_number,
         postcode=postcode,
@@ -93,13 +93,22 @@ def register(request):
         otp=my_otp
     )
 
-    load_dotenv("../../.env")
+    load_dotenv()
 
     # Send the OTP to the user's email
     # Email details
-    sender = os.getenv('EMAIL_ADDRESS')
-    password = os.getenv('EMAIL_PASSWORD')
+    sender = os.getenv("EMAIL_ADDRESS")
+    smtp_password = os.getenv("EMAIL_PASSWORD")
     receiver = email
+
+    if not sender or not smtp_password:
+        EmailOTP.objects.filter(user=user).delete()
+        user.delete()
+        return json_error(
+            "EMAIL_NOT_CONFIGURED",
+            "Email service is not configured. Please contact support.",
+            status=500,
+        )
 
     # Message
     msg = MIMEText(f"Hello, this is your OTP from secureshift: {my_otp}.")
@@ -108,10 +117,21 @@ def register(request):
     msg["To"] = receiver
 
     # Send email
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(sender, password)
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(sender, smtp_password)
+            server.send_message(msg)
+    except (smtplib.SMTPException, OSError):
+        EmailOTP.objects.filter(user=user).delete()
+        user.delete()
+        return json_error(
+            "EMAIL_SEND_FAILED",
+            "Could not send OTP email. Please try again later.",
+            status=502,
+        )
 
     return JsonResponse(
         {
