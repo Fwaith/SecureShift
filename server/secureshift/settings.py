@@ -164,5 +164,11 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
 ]
 
+# Allow auth/session cookies for cross-site frontend -> backend requests.
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+
 # https://pypi.org/project/django-cors-headers/
 # CORS_ALLOW_ALL_ORIGINS = True
