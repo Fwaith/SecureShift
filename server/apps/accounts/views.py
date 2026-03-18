@@ -1,6 +1,10 @@
 import json
 import random
 from datetime import timedelta
+import smtplib
+from email.mime.text import MIMEText
+import os
+from dotenv import load_dotenv
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
@@ -80,12 +84,34 @@ def register(request):
         postcode=postcode,
     )
 
+    my_otp = generate_otp()
+
     # Remove any existing OTPs for this user and create a new one
     EmailOTP.objects.filter(user=user).delete()
     EmailOTP.objects.create(
         user=user,
-        otp=generate_otp()
+        otp=my_otp
     )
+
+    load_dotenv("../../.env")
+
+    # Send the OTP to the user's email
+    # Email details
+    sender = os.getenv('EMAIL_ADDRESS')
+    password = os.getenv('EMAIL_PASSWORD')
+    receiver = email
+
+    # Message
+    msg = MIMEText(f"Hello, this is your OTP from secureshift: {my_otp}.")
+    msg["Subject"] = "SecureShift OTP"
+    msg["From"] = sender
+    msg["To"] = receiver
+
+    # Send email
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender, password)
+        server.send_message(msg)
 
     return JsonResponse(
         {

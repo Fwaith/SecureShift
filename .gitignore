@@ -5,3 +5,4 @@
 server/venv/
 .venv/
 .vscode/
+server/.env
