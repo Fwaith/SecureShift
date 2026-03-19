@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from accounts.views import login, logout, register, update_user, verify_otp, users_me
 from habitability.views import get_neighbourhoods
+from apps.reports.views import add_comment, create_report, get_report, get_reports, remove_upvote, upvote_report
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,4 +29,10 @@ urlpatterns = [
     path('api/v1/users/me/update', update_user, name='update_user'),
     path('api/v1/users/me', users_me, name='users_me'),
     path('api/v1/neighbourhoods', get_neighbourhoods, name='get_neighbourhoods'),
+    path('api/v1/reports', get_reports, name='get_reports'),
+    path('api/v1/reports/create', create_report, name='create_report'),
+    path('api/v1/reports/<int:report_id>', get_report, name='get_report'),
+    path('api/v1/reports/upvote', upvote_report, name='upvote_report'),
+    path('api/v1/reports/upvote/remove', remove_upvote, name='remove_upvote'),
+    path('api/v1/comments', add_comment, name='add_comment'),
 ]
