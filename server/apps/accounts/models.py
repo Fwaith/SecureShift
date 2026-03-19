@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.apps import apps
 
 
 class User(AbstractUser):
@@ -7,6 +8,13 @@ class User(AbstractUser):
     
     phone_number = models.CharField(max_length=20, blank=True, default='')
     postcode = models.CharField(max_length=10, blank=True, default='')
+    neighborhood = models.ForeignKey(
+        'habitability.Neighborhood',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+    )
 
     groups = models.ManyToManyField(
         'auth.Group',
@@ -21,6 +29,38 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    # Overrides save to automatically create or link a Neighborhood based on the postcode
+    # Hack to fix original implementation of user creation
+    # In which user's neighbourhood was simply a strng
+    def save(self, *args, **kwargs):
+        # CLean postcode
+        postcode = self.postcode.strip().upper()
+        self.postcode = postcode
+
+        if postcode:
+            neighborhood = None
+            Neighborhood = apps.get_model('habitability', 'Neighborhood')
+
+            neighborhood = (
+                Neighborhood.objects.filter(postcode=postcode)
+                .order_by('neighborhood_id')
+                .first()
+            )
+
+            if neighborhood is None:
+                # Means we haven;t found a neighbourhood w this postcode, so we create one
+                # TODO: Use an API to get actual neighbourhood name?
+                neighborhood_name = postcode
+                    
+                neighborhood = Neighborhood.objects.create(
+                    neighborhood_name=neighborhood_name,
+                    postcode=postcode,
+                )
+
+            self.neighborhood = neighborhood
+
+        super().save(*args, **kwargs)
 
 class EmailOTP(models.Model):
     user = models.ForeignKey(
