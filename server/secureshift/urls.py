@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from accounts.views import login, logout, register, update_user, verify_otp, users_me
+from habitability.views import get_neighbourhoods
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +27,5 @@ urlpatterns = [
     path('api/v1/auth/logout', logout, name='logout'),
     path('api/v1/users/me/update', update_user, name='update_user'),
     path('api/v1/users/me', users_me, name='users_me'),
+    path('api/v1/neighbourhoods', get_neighbourhoods, name='get_neighbourhoods'),
 ]
