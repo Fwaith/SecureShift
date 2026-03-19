@@ -1,6 +1,10 @@
 import json
 import random
 from datetime import timedelta
+import smtplib
+from email.mime.text import MIMEText
+import os
+from dotenv import load_dotenv
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
@@ -55,9 +59,9 @@ def register(request):
     email = data["email"].strip().lower()
     phone_number = data["phoneNumber"].strip()
     postcode = data["postcode"].strip().upper()
-    password = data["password"]
+    user_password = data["password"]
 
-    if len(password) < 8:
+    if len(user_password) < 8:
         return json_error(
             "VALIDATION_ERROR",
             "Password must be at least 8 characters.",
@@ -74,18 +78,60 @@ def register(request):
         username=username,
         email=email,
         # create_user will hash the password, so we can pass it directly
-        password=password,
+        password=user_password,
         is_active=False,
         phone_number=phone_number,
         postcode=postcode,
     )
 
+    my_otp = generate_otp()
+
     # Remove any existing OTPs for this user and create a new one
     EmailOTP.objects.filter(user=user).delete()
     EmailOTP.objects.create(
         user=user,
-        otp=generate_otp()
+        otp=my_otp
     )
+
+    load_dotenv()
+
+    # Send the OTP to the user's email
+    # Email details
+    sender = os.getenv("EMAIL_ADDRESS")
+    smtp_password = os.getenv("EMAIL_PASSWORD")
+    receiver = email
+
+    if not sender or not smtp_password:
+        EmailOTP.objects.filter(user=user).delete()
+        user.delete()
+        return json_error(
+            "EMAIL_NOT_CONFIGURED",
+            "Email service is not configured. Please contact support.",
+            status=500,
+        )
+
+    # Message
+    msg = MIMEText(f"Hello, this is your OTP from secureshift: {my_otp}.")
+    msg["Subject"] = "SecureShift OTP"
+    msg["From"] = sender
+    msg["To"] = receiver
+
+    # Send email
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(sender, smtp_password)
+            server.send_message(msg)
+    except (smtplib.SMTPException, OSError):
+        EmailOTP.objects.filter(user=user).delete()
+        user.delete()
+        return json_error(
+            "EMAIL_SEND_FAILED",
+            "Could not send OTP email. Please try again later.",
+            status=502,
+        )
 
     return JsonResponse(
         {

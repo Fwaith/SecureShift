@@ -17,8 +17,7 @@
                         v-for="report in filteredReports"
                         :key="report.id"
                         :lat-lng="[report.lat, report.lng]"
-                        :icon="getIcon(report.type)"
-                        @click="openPopup(report)"   
+                        :icon="getIcon(report.type)" 
                     >
                         <l-popup :options="{ autoPan: true, closeButton: true }">
                             <div class="popup-card">
@@ -152,21 +151,8 @@ async function fetchReports() {
     generateReports()
 }
 
-async function upvote(report) {
-    try {
-        const res = await fetch(`${API}/reports/upvote`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reportId: report.id }),
-            credentials: 'include'
-        })
-        if (res.ok) {
-            report.votes++
-            console.log('vote saved to backend')
-        }
-    } catch (err) {
-        alert('Please log in to vote (session required)')
-    }
+function upvote(report) {
+    report.votes++
 }
 
 //demo data

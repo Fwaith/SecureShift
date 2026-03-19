@@ -3,3 +3,6 @@
 # Commiting them leads to commiting loads of unnecessary files that will change with every commit
 *.pyc
 server/venv/
+.venv/
+.vscode/
+server/.env

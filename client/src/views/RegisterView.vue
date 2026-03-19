@@ -124,11 +124,13 @@ const showPassword = ref(false)
 const countryCodes = ['+44', '+60', '+65', '+1', '+61', '+91', '+86']
 
 const API = `${import.meta.env.VITE_API_URL}/api/v1` 
+console.log('API:', API)
 
 const handleRegister = async () => {
     error.value = ''
     success.value = ''
     loading.value = true
+    console.log("REGISTER CLICKED")
 
     const registerData = {
         username: form.value.username,
