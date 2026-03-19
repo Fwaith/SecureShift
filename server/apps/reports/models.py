@@ -34,8 +34,8 @@ class Comments(models.Model):
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="comments")
     reply_to = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
     description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)  # ADD THIS LINE
 
-    # For our use/ testing
     def __str__(self):
         return f"Comment{self.comment_id}"
         
