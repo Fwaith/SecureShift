@@ -99,7 +99,7 @@ def get_report(request, report_id):
 @csrf_exempt
 @require_http_methods(["POST"])
 def create_report(request):
-    if not request.user.is_authenticated:
+    if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
 
     try:
@@ -135,7 +135,7 @@ def create_report(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def upvote_report(request):
-    if not request.user.is_authenticated:
+    if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
 
     try:
@@ -160,7 +160,7 @@ def upvote_report(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def remove_upvote(request):
-    if not request.user.is_authenticated:
+    if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
 
     try:
@@ -182,7 +182,7 @@ def remove_upvote(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def add_comment(request):
-    if not request.user.is_authenticated:
+    if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
 
     try:
