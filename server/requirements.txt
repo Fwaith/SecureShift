@@ -3,9 +3,11 @@ Django==6.0.3
 django-cors-headers==4.9.0
 djangorestframework==3.16.1
 gunicorn==23.0.0
+# If you get an err on this line, add/ remove -binary and try again
 psycopg2-binary==2.9.11
 python-dotenv==1.2.2
 sqlparse==0.5.5
 django_extensions
 django-extensions==4.1.0
 django-cors-headers==4.9.0
+pgeocode==0.5.0

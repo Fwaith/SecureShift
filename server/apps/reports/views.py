@@ -25,8 +25,8 @@ def _derive_report_severity(report):
 def serialize_report_overview(report):
     return {
         "id": report.report_id,
-        "lat": None,
-        "lng": None,
+        "lat": report.neighbourhood.lat if report.neighbourhood else None,
+        "lng": report.neighbourhood.lon if report.neighbourhood else None,
         "type": report.title,
         "area": report.neighbourhood.neighborhood_name if report.neighbourhood else "",
         "severity": _derive_report_severity(report),
