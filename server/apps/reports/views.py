@@ -5,6 +5,10 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from .models import Report, Votes, Comments
 from habitability.models import Neighborhood
+from accounts.models import User
+
+def _get_session_user(request):
+    return User.objects.get(pk=request.session["user_id"])
 
 def _format_report_status(status):
     normalized = (status or "").strip().lower().replace("_", " ")
@@ -101,6 +105,7 @@ def get_report(request, report_id):
 def create_report(request):
     if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
+    user = _get_session_user(request)
 
     try:
         body = json.loads(request.body)
@@ -121,7 +126,7 @@ def create_report(request):
 
     Report.objects.create(
         neighbourhood=neighbourhood,
-        user=request.user,
+        user=user,
         title=title,
         description=description,
         status="pending",
@@ -137,6 +142,7 @@ def create_report(request):
 def upvote_report(request):
     if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
+    user = _get_session_user(request)
 
     try:
         body = json.loads(request.body)
@@ -145,7 +151,7 @@ def upvote_report(request):
         return JsonResponse({"error": "NOT_FOUND", "message": "Report not found"}, status=404)
 
     _, created = Votes.objects.get_or_create(
-        user=request.user, report=report,
+        user=user, report=report,
         defaults={"date_voted": timezone.now().date()}
     )
     if not created:
@@ -162,6 +168,7 @@ def upvote_report(request):
 def remove_upvote(request):
     if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
+    user = _get_session_user(request)
 
     try:
         body = json.loads(request.body)
@@ -169,7 +176,7 @@ def remove_upvote(request):
     except (json.JSONDecodeError, Report.DoesNotExist):
         return JsonResponse({"error": "NOT_FOUND", "message": "Report not found"}, status=404)
 
-    deleted, _ = Votes.objects.filter(user=request.user, report=report).delete()
+    deleted, _ = Votes.objects.filter(user=user, report=report).delete()
     if not deleted:
         return JsonResponse({"error": "NOT_VOTED", "message": "You have not upvoted this report"}, status=400)
 
@@ -184,6 +191,7 @@ def remove_upvote(request):
 def add_comment(request):
     if "user_id" not in request.session:
         return JsonResponse({"error": "UNAUTHORIZED", "message": "Login required"}, status=401)
+    user = _get_session_user(request)
 
     try:
         body = json.loads(request.body)
@@ -211,7 +219,7 @@ def add_comment(request):
 
     Comments.objects.create(
         report=report,
-        user=request.user,
+        user=user,
         description=description,
         reply_to=reply_to,
     )
