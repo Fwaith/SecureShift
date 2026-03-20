@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from accounts.views import login, logout, register, update_user, verify_otp, users_me
 from habitability.views import get_neighbourhoods
-from apps.reports.views import add_comment, create_report, get_report, get_reports, remove_upvote, upvote_report
+from reports.views import add_comment, create_report, get_report, get_reports, remove_upvote, upvote_report
 
 urlpatterns = [
     path('admin/', admin.site.urls),
