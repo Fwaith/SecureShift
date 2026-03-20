@@ -1,5 +1,19 @@
 from django.db import models
 from django.db.models import F     # refers to model field value directly in database
+import pgeocode
+
+def _lookup_coordinates_from_postcode(postcode):
+    if not postcode:
+        return None, None
+
+    result = pgeocode.Nominatim("gb").query_postal_code(postcode)
+    latitude = getattr(result, "latitude", None)
+    longitude = getattr(result, "longitude", None)
+
+    latitude = float(latitude)
+    longitude = float(longitude)
+
+    return latitude, longitude
 
 class Region(models.Model):
     region_id = models.AutoField(primary_key=True)
@@ -16,6 +30,21 @@ class Neighborhood(models.Model):
     region = models.ForeignKey("Region", on_delete=models.CASCADE, related_name="neighborhoods", null=True, blank=True)  # 1-Many relationship with neighborhoods
     neighborhood_name = models.CharField(max_length=100, unique=True)
     postcode = models.CharField(max_length=7, null=True, blank=True)
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.postcode:
+            self.postcode = "".join(self.postcode.upper().split())
+
+        if self.postcode and (self.lat is None or self.lon is None):
+            latitude, longitude = _lookup_coordinates_from_postcode(self.postcode)
+            if self.lat is None:
+                self.lat = latitude
+            if self.lon is None:
+                self.lon = longitude
+
+        super().save(*args, **kwargs)
 
     # For our use/ testing
     def __str__(self):
