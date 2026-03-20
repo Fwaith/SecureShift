@@ -6,6 +6,34 @@ from django.utils import timezone
 from .models import Report, Votes, Comments
 from habitability.models import Neighborhood
 
+def _format_report_status(status):
+    normalized = (status or "").strip().lower().replace("_", " ")
+    if normalized == "in progress":
+        return "In Progress"
+    if normalized == "resolved":
+        return "Resolved"
+    return "Pending"
+
+def _derive_report_severity(report):
+    # severity is inferred from vote count for overview ranking.
+    if report.vote_count >= 20:
+        return "high"
+    if report.vote_count >= 10:
+        return "medium"
+    return "low"
+
+def serialize_report_overview(report):
+    return {
+        "id": report.report_id,
+        "lat": None,
+        "lng": None,
+        "type": report.title,
+        "area": report.neighbourhood.neighborhood_name if report.neighbourhood else "",
+        "severity": _derive_report_severity(report),
+        "status": _format_report_status(report.status),
+        "votes": report.vote_count,
+        "timestamp": int(report.date_submitted.strftime("%s")) if report.date_submitted else None,
+    }
 
 def serialize_comment(comment):
     return {
@@ -46,6 +74,14 @@ def get_reports(request):
 
     reports = Report.objects.filter(neighbourhood_id=neighbourhood_id).order_by("-vote_count")
     return JsonResponse([serialize_report(r) for r in reports], safe=False)
+
+
+# GET /api/v1/reports/overview
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_reports_overview(request):
+    reports = Report.objects.select_related("neighbourhood").order_by("-date_submitted", "-vote_count")
+    return JsonResponse([serialize_report_overview(r) for r in reports], safe=False)
 
 
 # GET /api/v1/reports/<reportId>
