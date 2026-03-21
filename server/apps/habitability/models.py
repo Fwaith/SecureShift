@@ -36,6 +36,18 @@ class Neighborhood(models.Model):
     def save(self, *args, **kwargs):
         if self.postcode:
             self.postcode = "".join(self.postcode.upper().split())
+            
+            # Auto-assign region based on postcode if not already set
+            if not self.region_id:
+                try:
+                    result = pgeocode.Nominatim("gb").query_postal_code(self.postcode)
+                    county = getattr(result, "county", None)
+                    print(f"DEBUG: Postcode {self.postcode} maps to county {county}")
+                    if county:
+                        self.region = Region.objects.get(region_name=county)
+                except (Region.DoesNotExist, Exception):
+                    print(f"ERR: Could not find region for postcode {self.postcode}.")
+                    pass
 
         if self.postcode and (self.lat is None or self.lon is None):
             latitude, longitude = _lookup_coordinates_from_postcode(self.postcode)
