@@ -22,8 +22,8 @@ def _lookup_county_from_postcode(postcode):
         return None
     
     try:
-        response = requests.get(f"https://api.postcodes.io/postcodes/{postcode}")
-        print(f"URL requested: https://api.postcodes.io/postcodes/{postcode}")
+        response = requests.get(f"https://api.postcodes.io/outcodes/{postcode}")
+        print(f"URL: https://api.postcodes.io/outcodes/{postcode} - Status: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
             if data.get('result'):
