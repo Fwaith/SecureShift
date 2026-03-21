@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import F     # refers to model field value directly in database
 import pgeocode
+import requests
 
 def _lookup_coordinates_from_postcode(postcode):
     if not postcode:
@@ -15,6 +16,28 @@ def _lookup_coordinates_from_postcode(postcode):
 
     return latitude, longitude
 
+def _lookup_county_from_postcode(postcode):
+    """Look up county from UK postcode using postcodes.io API"""
+    if not postcode:
+        return None
+    
+    try:
+        response = requests.get(f"https://api.postcodes.io/postcodes/{postcode}")
+        print(f"URL requested: https://api.postcodes.io/postcodes/{postcode}")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('result'):
+                # postcodes.io returns 'county' or 'admin_county'
+                county = data['result'].get('county') or data['result'].get('admin_county')
+                print(f"DEBUG: Postcode {postcode} maps to county: {county}")
+                return county
+        else:
+            print(f"ERR: postcodes.io returned status {response.status_code} for {postcode}")
+    except Exception as e:
+        print(f"ERR: postcodes.io lookup failed for {postcode}: {str(e)}")
+    
+    return None
+
 class Region(models.Model):
     region_id = models.AutoField(primary_key=True)
     region_name = models.CharField(max_length=20)
@@ -27,7 +50,7 @@ class Region(models.Model):
 
 class Neighborhood(models.Model):
     neighborhood_id = models.AutoField(primary_key=True)
-    region = models.ForeignKey("Region", on_delete=models.CASCADE, related_name="neighborhoods", null=True, blank=True)  # 1-Many relationship with neighborhoods
+    region = models.ForeignKey("Region", on_delete=models.CASCADE, related_name="neighborhoods", null=True, blank=True)
     neighborhood_name = models.CharField(max_length=100, unique=True)
     postcode = models.CharField(max_length=7, null=True, blank=True)
     lat = models.FloatField(null=True, blank=True)
@@ -39,15 +62,15 @@ class Neighborhood(models.Model):
             
             # Auto-assign region based on postcode if not already set
             if not self.region_id:
-                try:
-                    result = pgeocode.Nominatim("gb").query_postal_code(self.postcode)
-                    county = getattr(result, "county", None)
-                    print(f"DEBUG: Postcode {self.postcode} maps to county {county}")
-                    if county:
+                county = _lookup_county_from_postcode(self.postcode)
+                if county:
+                    try:
                         self.region = Region.objects.get(region_name=county)
-                except (Region.DoesNotExist, Exception):
-                    print(f"ERR: Could not find region for postcode {self.postcode}.")
-                    pass
+                        print(f"DEBUG: Assigned region '{county}' to postcode {self.postcode}")
+                    except Region.DoesNotExist:
+                        print(f"ERR: Region '{county}' not found in database for postcode {self.postcode}")
+                else:
+                    print(f"ERR: Could not determine county for postcode {self.postcode}")
 
         if self.postcode and (self.lat is None or self.lon is None):
             latitude, longitude = _lookup_coordinates_from_postcode(self.postcode)
