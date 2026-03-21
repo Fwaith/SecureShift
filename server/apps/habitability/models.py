@@ -62,7 +62,7 @@ class Neighborhood(models.Model):
             
             # Auto-assign region based on postcode if not already set
             if not self.region_id:
-                county = _lookup_county_from_postcode(self.postcode)
+                county = _lookup_county_from_postcode(self.postcode)[0]
                 if county:
                     try:
                         self.region = Region.objects.get(region_name=county)
