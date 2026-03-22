@@ -14,7 +14,7 @@
                     />
 
                     <l-marker
-                        v-for="report in filteredReports"
+                        v-for="report in filteredReportsWithLocation"
                         :key="report.id"
                         :lat-lng="[report.lat, report.lng]"
                         :icon="getIcon(report.type)" 
@@ -24,8 +24,8 @@
                                 <h3>{{ report.type }}</h3>
                                 <p><strong>Location:</strong> {{ report.area || 'Not specified' }}</p>
                                 <p><strong>Severity:</strong> {{ report.severity || 'N/A' }}</p>
-                                <p><strong>Status:</strong> {{ report.status }}</p>
-                                <p><strong>Votes:</strong> {{ report.votes }}</p>
+                                <p><strong>Status:</strong> {{ report.status || 'pending' }}</p>
+                                <p><strong>Votes:</strong> {{ report.voteCount || report.votes || 0 }}</p>
                             </div>
                         </l-popup>
                     </l-marker>
@@ -64,6 +64,13 @@
                         </button>
                     </div>
                 </div>
+                
+                <div v-if="!reports.length" class="no-reports">
+                    <p>No reports found yet. Be the first to report an issue!</p>
+                </div>
+                <div v-else-if="filteredReports.length === 0" class="no-reports">
+                    <p>No matching reports — try changing filters</p>
+                </div>
 
                 <div class="reports-grid">
                     <div 
@@ -97,7 +104,7 @@
                             >
                                 Downvote
                             </button>
-                            <span class="vote-count">{{ report.votes }} votes</span>
+                            <span class="vote-count">{{ report.voteCount || report.votes || 0 }} votes</span>
                         </div>
 
                         <small class="timestamp">
@@ -121,7 +128,7 @@
                             <label>Type of Issue *</label>
                             <div class="type-options">
                                 <button
-                                    v-for="type in issueTypes"
+                                    v-for="type in disasterTypes"
                                     :key="type"
                                     type="button"
                                     class="type-btn"
@@ -230,8 +237,6 @@ const sortBy = ref('votes')
 const showReportModal = ref(false)
 const isSubmitting = ref(false)
 
-const issueTypes = ['Flood', 'Power Outage', 'Road Blocked', 'Storm Damage', 'Wildfire', 'Landslide', 'Infrastructure Damage', 'Other']
-
 const newReport = ref({
     type: '',
     customType: '',
@@ -270,13 +275,14 @@ async function fetchReports() {
 }
 
 async function upvote(report) {
-    if (!report?.id) return
+    const id = report.reportId || report.id
+    if (!id) return
     try {
         const res = await fetch(`${API}/reports/upvote`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reportId: report.id })
+            body: JSON.stringify({ reportId: id })
         })
 
         if (res.ok) {
@@ -290,7 +296,8 @@ async function upvote(report) {
 }
 
 async function removeUpvote(report) {
-    if (!report?.id) return
+    const id = report.reportId || report.id
+    if (!id) return
     try {
         const res = await fetch(`${API}/reports/upvote/remove`, {
             method: 'POST',
@@ -315,13 +322,13 @@ async function createReport() {
     isSubmitting.value = true
 
     const finalType = newReport.value.type === 'Other' 
-        ? newReport.value.customType.trim() 
+        ? newReport.value.customType.trim()  || 'Other'
         : newReport.value.type
 
     const payload = {
-        neighbourhoodId: NEIGHBOURHOOD_ID,
+        neighbourhoodId: Number(newReport.value.neighbourhoodId),
         title: newReport.value.title.trim(),
-        description: newReport.value.description.trim() || undefined,
+        description: newReport.value.description.trim(),
         type: finalType,
         severity: newReport.value.severity
     }
@@ -388,24 +395,37 @@ function generateReports() {
 }
 
 const filteredReports = computed(() => {
-    let result = reports.value.filter(report => {
-        const matchesSearch = 
-            !searchTerm.value ||
-            report.area.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            report.type.toLowerCase().includes(searchTerm.value.toLowerCase())
-        
-        const matchesType = !filterType.value || report.type === filterType.value
-        
-        return matchesSearch && matchesType
-    })
+    let filtered = [...reports.value]
 
-    if (sortBy.value === 'votes') {
-        result.sort((a, b) => b.votes - a.votes)
-    } else {
-        result.sort((a, b) => b.timestamp - a.timestamp)
+    if (searchTerm.value.trim()) {
+        const term = searchTerm.value.toLowerCase().trim()
+        filtered = filtered.filter(report =>
+            (report.area?.toLowerCase() || '').includes(term) ||
+            (report.type?.toLowerCase() || '').includes(term) ||
+            (report.title?.toLowerCase() || '').includes(term)
+        )
     }
 
-    return result
+    if (filterType.value) {
+        filtered = filtered.filter(report => report.type === filterType.value)
+    }
+
+    if (sortBy.value === 'votes') {
+        filtered.sort((a, b) => (b.voteCount || b.votes || 0) - (a.voteCount || a.votes || 0))
+    } else if (sortBy.value === 'recent') {
+        filtered.sort((a, b) => (new Date(b.createdAt || b.date_submitted) - new Date(a.createdAt || a.date_submitted)))
+    }
+
+    return filtered
+})
+
+const filteredReportsWithLocation = computed(() => {
+    return filteredReports.value.filter(report =>
+        typeof report.lat === 'number' &&
+        typeof report.lng === 'number' &&
+        !isNaN(report.lat) &&
+        !isNaN(report.lng)
+  )
 })
 
 const resolvedReports = computed(() => 
@@ -456,6 +476,7 @@ onMounted(() => {
 
 .map-container {
     height: 60vh;
+    min-height: 400px;
     position: relative;
 }
 
@@ -484,6 +505,13 @@ onMounted(() => {
 .reports-header h2 {
     margin: 0;
     color: #1e293b;
+}
+
+.no-reports {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+    font-size: 1.1rem;
 }
 
 .controls {
