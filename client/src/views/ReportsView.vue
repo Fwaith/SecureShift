@@ -214,19 +214,49 @@
 
             <div v-if="selectedReport" class="modal-overlay" @click.self="selectedReport = null">
                 <div class="modal-content">
-                    <h3>{{ selectedReport.title || selectedReport.type || 'Report Details' }}</h3>
+                    <button class="close-modal" @click="selectedReport = null">×</button>
 
-                    <p><strong>Area:</strong> {{ formatArea(selectedReport.area) }}</p>
-                    <p><strong>Type:</strong> {{ selectedReport.type || 'N/A' }}</p>
-                    <p><strong>Severity:</strong> {{ selectedReport.severity || 'N/A' }}</p>
-                    <p><strong>Status:</strong> {{ selectedReport.status || 'Pending' }}</p>
+                    <h3>{{ selectedReport.title || selectedReport.type || 'Report' }}</h3>
+
+                    <div class="meta-row">
+                        <span class="badge" :style="{ backgroundColor: getIconColor(selectedReport.type) }">
+                            {{ selectedReport.type || 'Unknown' }}
+                        </span>
+                        <span class="badge severity" :class="selectedReport.severity?.toLowerCase()">
+                            {{ selectedReport.severity || '—' }}
+                        </span>
+                        <span class="badge status" :class="selectedReport.status?.toLowerCase() || 'pending'">
+                            {{ selectedReport.status || 'Pending' }}
+                        </span>
+                    </div>
+
+                    <p class="area"><strong>Area:</strong> {{ formatArea(selectedReport.area) || 'Not specified' }}</p>
                     <p><strong>Votes:</strong> {{ selectedReport.voteCount || selectedReport.votes || 0 }}</p>
-                    <p><strong>Description:</strong> {{ selectedReport.description || 'No description provided.' }}</p>
 
-                    <div class="form-actions">
-                        <button type="button" class="cancel-btn" @click="selectedReport = null">
-                            Close
-                        </button>
+                    <div class="description-block">
+                        <h4>Description</h4>
+                        <p>{{ selectedReport.description || 'No further details provided.' }}</p>
+                    </div>
+                    
+                    <div class="comments-preview-section">
+                        <h4>Comments ({{ selectedReport.comments?.length || 0 }})</h4>
+
+                        <div v-if="selectedReport.comments?.length" class="comment-previews">
+                            <div v-for="c in selectedReport.comments.slice(0, 2)" :key="c.commentId" class="preview-item">
+                                <strong>{{ c.username }}</strong>
+                                <p>{{ c.description.substring(0, 80) }}{{ c.description.length > 80 ? '...' : '' }}</p>
+                            </div>
+                        </div>
+                        <p v-else class="no-comments">No comments yet.</p>
+
+                        <div class="modal-buttons">
+                            <button 
+                                class="btn view-full"
+                                @click="openFullDiscussion(selectedReport)"
+                            >
+                                {{ selectedReport.comments?.length ? 'View full discussion →' : 'Start discussion →' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -240,7 +270,9 @@ import { ref, computed, onMounted } from "vue"
 import * as L from 'leaflet'
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet"
 import "leaflet/dist/leaflet.css"
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const selectedReport = ref(null)
 const API = `${import.meta.env.VITE_API_URL}/api/v1`
 const NEIGHBOURHOOD_ID = 1
@@ -248,7 +280,6 @@ const NEIGHBOURHOOD_ID = 1
 const zoom = ref(9)
 const center = ref([52.4862, -1.8904])
 const reports = ref([])
-const mapRef = ref(null)
 
 const searchTerm = ref('')
 const filterType = ref('')
@@ -284,6 +315,11 @@ const formIsValid = computed(() => {
         newReport.value.title.trim()
     )
 })
+
+function openFullDiscussion(report) {
+    selectedReport.value = null
+    router.push(`/reports/${report.reportId || report.id}`)
+}
 
 async function fetchReports() {
     try {
@@ -520,27 +556,6 @@ function getIcon(type) {
     return iconCache[type]
 }
 
-function openPopup(report) {
-    if (!report || typeof report.lat !== 'number' || typeof report.lng !== 'number') return
-
-    const map = mapRef.value?.leafletObject
-    if (!map) return
-
-    map.setView([report.lat, report.lng], 13, { animate: true })
-
-    setTimeout(() => {
-        map.eachLayer((layer) => {
-            if (
-                layer instanceof L.Marker &&
-                layer.getLatLng().lat === report.lat &&
-                layer.getLatLng().lng === report.lng
-            ) {
-                layer.openPopup()
-            }
-        })
-    }, 200)
-}
-
 onMounted(() => {
     fetchReports()
 })
@@ -593,6 +608,53 @@ onMounted(() => {
     padding: 60px 20px;
     color: #64748b;
     font-size: 1.1rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 28px;
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+}
+.meta-row {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: white;
+}
+
+.severity.low    { background: #84cc16; }
+.severity.medium { background: #f59e0b; }
+.severity.high   { background: #ef4444; }
+.status.pending     { background: #fbbf24; color: #78350f; }
+.status.in-progress { background: #60a5fa; }
+.status.resolved    { background: #34d399; }
+.description-block { margin: 20px 0; padding: 16px; background: #f9fafb; border-radius: 8px; }
+.comments-preview-section { margin-top: 24px; border-top: 1px solid #eee; padding-top: 20px; }
+.comment-previews { margin: 12px 0; }
+.preview-item { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+.preview-item strong { color: #333; }
+.modal-buttons { margin-top: 16px; text-align: center; }
+
+.btn.view-full {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .controls {

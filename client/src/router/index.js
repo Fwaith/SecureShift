@@ -14,6 +14,7 @@ const routes = [
     { path: '/reports', name: 'reports', component: ReportsView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/authority', name: 'authority', component: AuthorityView },
+    { path: '/reports/:reportId', name: 'ReportDetail', component: () => import('../views/ReportDetail.vue')},
     { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
