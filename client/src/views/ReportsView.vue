@@ -77,7 +77,7 @@
                         v-for="report in filteredReports" 
                         :key="report.id"
                         class="report-card"
-                        @click="openPopup(report)"
+                        @click="selectedReport = report"
                     >
                         <div class="card-header">
                             <span class="type-badge" :style="{ backgroundColor: getIconColor(report.type) }">
@@ -88,7 +88,7 @@
                             </span>
                         </div>
 
-                        <h4>{{ report.area }}</h4>
+                        <h4>{{ formatArea(report.area) }}</h4>
                         <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
                         
                         <div class="vote-section">
@@ -211,6 +211,25 @@
                     </form>
                 </div>
             </div>
+
+            <div v-if="selectedReport" class="modal-overlay" @click.self="selectedReport = null">
+                <div class="modal-content">
+                    <h3>{{ selectedReport.title || selectedReport.type || 'Report Details' }}</h3>
+
+                    <p><strong>Area:</strong> {{ formatArea(selectedReport.area) }}</p>
+                    <p><strong>Type:</strong> {{ selectedReport.type || 'N/A' }}</p>
+                    <p><strong>Severity:</strong> {{ selectedReport.severity || 'N/A' }}</p>
+                    <p><strong>Status:</strong> {{ selectedReport.status || 'Pending' }}</p>
+                    <p><strong>Votes:</strong> {{ selectedReport.voteCount || selectedReport.votes || 0 }}</p>
+                    <p><strong>Description:</strong> {{ selectedReport.description || 'No description provided.' }}</p>
+
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" @click="selectedReport = null">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>
@@ -222,6 +241,7 @@ import * as L from 'leaflet'
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet"
 import "leaflet/dist/leaflet.css"
 
+const selectedReport = ref(null)
 const API = `${import.meta.env.VITE_API_URL}/api/v1`
 const NEIGHBOURHOOD_ID = 1
 
@@ -245,6 +265,16 @@ const newReport = ref({
     description: ''
 })
 
+const areaCoordinates = {
+    Greater_London: [51.5074, -0.1278],
+    Birmingham: [52.4862, -1.8904],
+    Manchester: [53.4808, -2.2426]
+}
+
+function formatArea(area) {
+    if (!area) return 'Unknown area'
+    return area.replace(/_/g, ' ')
+}
 const formIsValid = computed(() => {
     const hasType = newReport.value.type && 
                     (newReport.value.type !== 'Other' || newReport.value.customType.trim())
@@ -264,7 +294,24 @@ async function fetchReports() {
         if (!res.ok) throw new Error('Failed to fetch overview')
 
         const apiReports = await res.json()
-        reports.value = apiReports
+        console.log('API reports:', apiReports)
+        reports.value = apiReports.map(report => {
+            const fallback = areaCoordinates[report.area] || null
+
+            return {
+                ...report,
+                lat: report.lat != null
+                    ? Number(report.lat)
+                    : fallback
+                        ? fallback[0]
+                        : null,
+                lng: report.lng != null
+                    ? Number(report.lng)
+                    : fallback
+                        ? fallback[1]
+                        : null
+            }
+        })
 
         console.log(`Loaded ${apiReports.length} reports from /overview`)
         return
@@ -303,7 +350,7 @@ async function removeUpvote(report) {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reportId: report.id })
+            body: JSON.stringify({ reportId: id })
         })
 
         if (res.ok && (report.votes || 0) > 0) {
@@ -321,36 +368,49 @@ async function createReport() {
 
     isSubmitting.value = true
 
-    const finalType = newReport.value.type === 'Other' 
-        ? newReport.value.customType.trim()  || 'Other'
-        : newReport.value.type
+    const finalType =
+        newReport.value.type === 'Other'
+            ? (newReport.value.customType.trim() || 'Other')
+            : newReport.value.type
 
     const payload = {
-        neighbourhoodId: Number(newReport.value.neighbourhoodId),
+        neighbourhoodId: NEIGHBOURHOOD_ID,
         title: newReport.value.title.trim(),
         description: newReport.value.description.trim(),
-        type: finalType,
-        severity: newReport.value.severity
+        severity: newReport.value.severity,
+        type: finalType
     }
 
+    console.log('Sending report payload:', payload)
+
     try {
-        const res = await fetch(`${API}/reports`, {
+        const res = await fetch(`${API}/reports/create`, {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(payload)
         })
+
+        const data = await res.json().catch(() => ({}))
+        console.log('Create report response:', res.status, data)
 
         if (res.ok) {
             alert('Report submitted successfully!')
             showReportModal.value = false
-            newReport.value = { type: '', customType: '', severity: '', title: '', description: '' }
+            newReport.value = {
+                type: '',
+                customType: '',
+                severity: '',
+                title: '',
+                description: ''
+            }
             await fetchReports()
         } else if (res.status === 401) {
             alert('Please log in to report an issue')
         } else {
-            const err = await res.json()
-            alert(err.message || 'Failed to submit report')
+            alert(data.message || `Failed to submit report (${res.status})`)
         }
     } catch (err) {
         console.error('Report creation failed', err)
@@ -458,6 +518,27 @@ function getIcon(type) {
         })
     }
     return iconCache[type]
+}
+
+function openPopup(report) {
+    if (!report || typeof report.lat !== 'number' || typeof report.lng !== 'number') return
+
+    const map = mapRef.value?.leafletObject
+    if (!map) return
+
+    map.setView([report.lat, report.lng], 13, { animate: true })
+
+    setTimeout(() => {
+        map.eachLayer((layer) => {
+            if (
+                layer instanceof L.Marker &&
+                layer.getLatLng().lat === report.lat &&
+                layer.getLatLng().lng === report.lng
+            ) {
+                layer.openPopup()
+            }
+        })
+    }, 200)
 }
 
 onMounted(() => {
