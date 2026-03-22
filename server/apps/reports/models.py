@@ -6,6 +6,8 @@ class Report(models.Model):
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="reports")
     title = models.TextField()
     description = models.TextField()
+    severity = models.CharField(max_length=20)
+    type = models.CharField(max_length=100)
     status = models.CharField(max_length=20)
     date_submitted = models.DateField()
     vote_count = models.IntegerField()

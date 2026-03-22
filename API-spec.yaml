@@ -82,13 +82,17 @@ components:
 
     CreateReportRequest:
       type: object
-      required: [neighbourhoodId, title, description]
+      required: [neighbourhoodId, title, description, severity, type]
       properties:
         neighbourhoodId:
           type: integer
         title:
           type: string
         description:
+          type: string
+        severity:
+          type: string
+        type:
           type: string
 
     VoteRequest:
@@ -141,6 +145,10 @@ components:
         title:
           type: string
         description:
+          type: string
+        severity:
+          type: string
+        type:
           type: string
         status:
           type: string
