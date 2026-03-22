@@ -18,22 +18,14 @@ def _format_report_status(status):
         return "Resolved"
     return "Pending"
 
-def _derive_report_severity(report):
-    # severity is inferred from vote count for overview ranking.
-    if report.vote_count >= 20:
-        return "high"
-    if report.vote_count >= 10:
-        return "medium"
-    return "low"
-
 def serialize_report_overview(report):
     return {
         "id": report.report_id,
         "lat": report.neighbourhood.lat if report.neighbourhood else None,
         "lng": report.neighbourhood.lon if report.neighbourhood else None,
-        "type": report.title,
+        "type": report.type,
         "area": report.neighbourhood.neighborhood_name if report.neighbourhood else "",
-        "severity": _derive_report_severity(report),
+        "severity": report.severity,
         "status": _format_report_status(report.status),
         "votes": report.vote_count,
         "timestamp": int(report.date_submitted.strftime("%s")) if report.date_submitted else None,
@@ -58,6 +50,8 @@ def serialize_report(report, include_comments=False):
         "username": report.user.username,
         "title": report.title,
         "description": report.description,
+        "severity": report.severity,
+        "type": report.type,
         "status": report.status,
         "voteCount": report.vote_count,
         "createdAt": int(report.date_submitted.strftime("%s")) if report.date_submitted else None,
@@ -115,9 +109,17 @@ def create_report(request):
     neighbourhood_id = body.get("neighbourhoodId")
     title = body.get("title")
     description = body.get("description")
+    severity = body.get("severity")
+    report_type = body.get("type")
 
-    if not all([neighbourhood_id, title, description]):
-        return JsonResponse({"error": "MISSING_FIELDS", "message": "neighbourhoodId, title and description are required"}, status=400)
+    if not all([neighbourhood_id, title, description, severity, report_type]):
+        return JsonResponse(
+            {
+                "error": "MISSING_FIELDS",
+                "message": "neighbourhoodId, title, description, severity and type are required",
+            },
+            status=400,
+        )
 
     try:
         neighbourhood = Neighborhood.objects.get(pk=neighbourhood_id)
@@ -129,6 +131,8 @@ def create_report(request):
         user=user,
         title=title,
         description=description,
+        severity=severity,
+        type=report_type,
         status="pending",
         vote_count=0,
         date_submitted=timezone.now().date(),
