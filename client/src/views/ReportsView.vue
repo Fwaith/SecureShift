@@ -22,8 +22,8 @@
                         <l-popup :options="{ autoPan: true, closeButton: true }">
                             <div class="popup-card">
                                 <h3>{{ report.type }}</h3>
-                                <p><strong>Location:</strong> {{ report.area }}</p>
-                                <p><strong>Severity:</strong> {{ report.severity }}</p>
+                                <p><strong>Location:</strong> {{ report.area || 'Not specified' }}</p>
+                                <p><strong>Severity:</strong> {{ report.severity || 'N/A' }}</p>
                                 <p><strong>Status:</strong> {{ report.status }}</p>
                                 <p><strong>Votes:</strong> {{ report.votes }}</p>
                             </div>
@@ -55,6 +55,13 @@
                             <option value="votes">Most Voted</option>
                             <option value="recent">Most Recent</option>
                         </select>
+
+                        <button
+                            class="report-issue-btn"
+                            @click="showReportModal = true"
+                        >
+                            Report an Issue
+                        </button>
                     </div>
                 </div>
 
@@ -67,7 +74,7 @@
                     >
                         <div class="card-header">
                             <span class="type-badge" :style="{ backgroundColor: getIconColor(report.type) }">
-                                {{ report.type }}
+                                {{ report.type || report.title?.slice(0, 20) || 'Report' }}
                             </span>
                             <span class="status-badge" :class="report.status.toLowerCase().replace(' ', '-')">
                                 {{ report.status }}
@@ -79,10 +86,16 @@
                         
                         <div class="vote-section">
                             <button 
-                                class="vote-btn"
+                                class="vote-btn upvote-btn"
                                 @click.stop="upvote(report)"
                             >
-                                ▲ Upvote
+                                Upvote
+                            </button>
+                            <button 
+                                class="vote-btn downvote-btn"
+                                @click.stop="removeUpvote(report)"
+                            >
+                                Downvote
                             </button>
                             <span class="vote-count">{{ report.votes }} votes</span>
                         </div>
@@ -96,6 +109,99 @@
                 <div v-if="resolvedReports.length" class="resolved-teaser">
                     <h3>Previously Resolved ({{ resolvedReports.length }})</h3>
                     <p>Click to view full archive →</p>
+                </div>
+            </div>
+
+
+            <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
+                <div class="modal-content">
+                    <h3>Report a New Issue</h3>
+                    <form @submit.prevent="createReport">
+                        <div class="form-group">
+                            <label>Type of Issue *</label>
+                            <div class="type-options">
+                                <button
+                                    v-for="type in issueTypes"
+                                    :key="type"
+                                    type="button"
+                                    class="type-btn"
+                                    :class="{ 'selected': newReport.type === type }"
+                                    @click="newReport.type = type"
+                                >
+                                    {{ type }}
+                                </button>
+                            </div>
+                            <div v-if="newReport.type === 'Other'" class="other-input">
+                                <input
+                                    v-model="newReport.customType"
+                                    type="text"
+                                    placeholder="Please specify the issue..."
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Severity *</label>
+                            <div class="severity-options">
+                                <label class="severity-btn" :class="{ 'selected': newReport.severity === 'Low' }">
+                                <input
+                                    type="radio"
+                                    v-model="newReport.severity"
+                                    value="Low"
+                                    required
+                                />
+                                    Low
+                                </label>
+                                <label class="severity-btn" :class="{ 'selected': newReport.severity === 'Medium' }">
+                                <input
+                                    type="radio"
+                                    v-model="newReport.severity"
+                                    value="Medium"
+                                />
+                                    Medium
+                                </label>
+                                <label class="severity-btn" :class="{ 'selected': newReport.severity === 'High' }">
+                                <input
+                                    type="radio"
+                                    v-model="newReport.severity"
+                                    value="High"
+                                />
+                                    High
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="title">Title / Short Description *</label>
+                            <input
+                                id="title"
+                                v-model="newReport.title"
+                                type="text"
+                                placeholder="e.g. Flooding near New Street Station"
+                                required
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Additional Details (optional)</label>
+                            <textarea
+                                id="description"
+                                v-model="newReport.description"
+                                rows="4"
+                                placeholder="More information, exact location, photos if available, etc..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" @click="showReportModal = false">
+                                Cancel
+                            </button>
+                            <button type="submit" class="submit-btn" :disabled="isSubmitting || !formIsValid">
+                                {{ isSubmitting ? 'Submitting...' : 'Submit Report' }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -121,38 +227,130 @@ const searchTerm = ref('')
 const filterType = ref('')
 const sortBy = ref('votes')
 
+const showReportModal = ref(false)
+const isSubmitting = ref(false)
+
+const issueTypes = ['Flood', 'Power Outage', 'Road Blocked', 'Storm Damage', 'Wildfire', 'Landslide', 'Infrastructure Damage', 'Other']
+
+const newReport = ref({
+    type: '',
+    customType: '',
+    severity: '',
+    title: '',
+    description: ''
+})
+
+const formIsValid = computed(() => {
+    const hasType = newReport.value.type && 
+                    (newReport.value.type !== 'Other' || newReport.value.customType.trim())
+    return (
+        hasType &&
+        newReport.value.severity &&
+        newReport.value.title.trim()
+    )
+})
+
 async function fetchReports() {
     try {
-        const res = await fetch(`${API}/reports?neighbourhoodId=${NEIGHBOURHOOD_ID}`, {
+        const res = await fetch(`${API}/reports/overview?neighbourhoodId=${NEIGHBOURHOOD_ID}`, {
             credentials: 'include'
         })
-        if (!res.ok) throw new Error('API not ready')
 
-        let apiReports = await res.json()
-        if (apiReports && apiReports.length > 0) {
-            reports.value = apiReports.map(r => ({
-                id: r.reportId,
-                lat: 52.4862 + (Math.random() - 0.5) * 0.07,
-                lng: -1.8904 + (Math.random() - 0.5) * 0.07,
-                type: r.title || 'Community Report',
-                area: 'West Midlands',
-                severity: 'Medium',
-                status: r.status === 'in_progress' 
-                    ? 'In Progress' 
-                    : r.status.charAt(0).toUpperCase() + r.status.slice(1),
-                votes: r.voteCount || 0,
-                timestamp: r.createdAt * 1000 || Date.now()
-            }))
-            return
-        }
+        if (!res.ok) throw new Error('Failed to fetch overview')
+
+        const apiReports = await res.json()
+        reports.value = apiReports
+
+        console.log(`Loaded ${apiReports.length} reports from /overview`)
+        return
     } catch (err) {
-        console.warn('backend not responding, using demo data')
+        console.warn('Backend not responding, using demo data →', err.message)
+        generateReports()
     }
-    generateReports()
 }
 
-function upvote(report) {
-    report.votes++
+async function upvote(report) {
+    if (!report?.id) return
+    try {
+        const res = await fetch(`${API}/reports/upvote`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reportId: report.id })
+        })
+
+        if (res.ok) {
+            report.votes = (report.votes || 0) + 1
+        } else if (res.status === 401) {
+            alert('Please log in to vote')
+        }
+    } catch (err) {
+        console.error('Upvote failed', err)
+    }
+}
+
+async function removeUpvote(report) {
+    if (!report?.id) return
+    try {
+        const res = await fetch(`${API}/reports/upvote/remove`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reportId: report.id })
+        })
+
+        if (res.ok && (report.votes || 0) > 0) {
+            report.votes--
+        } else if (res.status === 401) {
+            alert('Please log in to vote')
+        }
+    } catch (err) {
+        console.error('Remove vote failed', err)
+    }
+}
+
+async function createReport() {
+    if (!formIsValid.value) return
+
+    isSubmitting.value = true
+
+    const finalType = newReport.value.type === 'Other' 
+        ? newReport.value.customType.trim() 
+        : newReport.value.type
+
+    const payload = {
+        neighbourhoodId: NEIGHBOURHOOD_ID,
+        title: newReport.value.title.trim(),
+        description: newReport.value.description.trim() || undefined,
+        type: finalType,
+        severity: newReport.value.severity
+    }
+
+    try {
+        const res = await fetch(`${API}/reports`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+
+        if (res.ok) {
+            alert('Report submitted successfully!')
+            showReportModal.value = false
+            newReport.value = { type: '', customType: '', severity: '', title: '', description: '' }
+            await fetchReports()
+        } else if (res.status === 401) {
+            alert('Please log in to report an issue')
+        } else {
+            const err = await res.json()
+            alert(err.message || 'Failed to submit report')
+        }
+    } catch (err) {
+        console.error('Report creation failed', err)
+        alert('Something went wrong. Please try again.')
+    } finally {
+        isSubmitting.value = false
+    }
 }
 
 //demo data
@@ -248,18 +446,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
 .report-page {
     width: 100%;
     height: 100vh;
@@ -303,13 +489,31 @@ onMounted(() => {
 .controls {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
-.search-input, .filter-select {
+.search-input,
+.filter-select {
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 0.95rem;
+}
+
+.report-issue-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.report-issue-btn:hover {
+    background: #059669;
 }
 
 .reports-grid {
@@ -354,25 +558,96 @@ onMounted(() => {
     font-size: 0.82rem;
     font-weight: 500;
 }
-.status-badge.pending { background: #fbbf24; color: #78350f; }
+
+.type-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.type-btn {
+    padding: 8px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.15s;
+}
+
+.type-btn.selected {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.other-input {
+    margin-top: 12px;
+}
+
+.other-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+.severity-options {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0;
+}
+
+.severity-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.severity-btn.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.severity-btn input {
+    margin: 0;
+}
+
+.status-badge.pending     { background: #fbbf24; color: #78350f; }
 .status-badge.in-progress { background: #60a5fa; color: white; }
-.status-badge.resolved { background: #34d399; color: white; }
+.status-badge.resolved    { background: #34d399; color: white; }
 
 .vote-section {
     margin-top: 12px;
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .vote-btn {
-    background: #3b82f6;
     color: white;
     border: none;
     padding: 6px 14px;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
+}
+
+.upvote-btn {
+    background: #3b82f6;
+}
+
+.downvote-btn {
+    background: #ef4444;
 }
 
 .vote-count {
@@ -383,6 +658,8 @@ onMounted(() => {
 .timestamp {
     color: #64748b;
     font-size: 0.85rem;
+    display: block;
+    margin-top: 8px;
 }
 
 .resolved-teaser {
@@ -392,6 +669,81 @@ onMounted(() => {
     border-radius: 8px;
     text-align: center;
     color: #475569;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+    margin: 0 0 20px;
+    color: #1e293b;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.cancel-btn {
+    background: #e2e8f0;
+    color: #475569;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.submit-btn:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
 }
 
 .popup-card {
