@@ -82,13 +82,17 @@ components:
 
     CreateReportRequest:
       type: object
-      required: [neighbourhoodId, title, description]
+      required: [neighbourhoodId, title, description, severity, type]
       properties:
         neighbourhoodId:
           type: integer
         title:
           type: string
         description:
+          type: string
+        severity:
+          type: string
+        type:
           type: string
 
     VoteRequest:
@@ -142,6 +146,10 @@ components:
           type: string
         description:
           type: string
+        severity:
+          type: string
+        type:
+          type: string
         status:
           type: string
           enum: [pending, in_progress, resolved]
@@ -161,6 +169,59 @@ components:
           type: integer
         postcode:
           type: string
+
+    HabitabilityScore:
+      type: object
+      properties:
+        scoreId:
+          type: integer
+        postcode:
+          type: string
+        regionId:
+          type: integer
+        regionName:
+          type: string
+        employmentRate:
+          type: number
+        income:
+          type: number
+        inflation:
+          type: number
+        airQuality:
+          type: number
+        waterQuality:
+          type: number
+        landFertility:
+          type: number
+        wasteManagement:
+          type: number
+        education:
+          type: number
+        healthcare:
+          type: number
+        transportation:
+          type: number
+        crime:
+          type: number
+        politics:
+          type: number
+        disasterRisks:
+          type: number
+        civicEngagement:
+          type: number
+        economyScore:
+          type: number
+        environmentScore:
+          type: number
+        infrastructureScore:
+          type: number
+        securityScore:
+          type: number
+        overallScore:
+          type: number
+        dateScored:
+          type: string
+          format: date
 
 paths:
 
@@ -463,6 +524,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+
+  /habitability/{postcode}:
+    get:
+      summary: Get habitability scores by postcode
+      parameters:
+        - name: postcode
+          in: path
+          required: true
+          schema:
+            type: string
+            example: B76
+      responses:
+        "200":
+          description: Habitability scores for postcode's region
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitabilityScore'
+        "404":
+          description: Region or habitability scores not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /neighbourhoods:
     get:

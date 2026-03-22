@@ -14,7 +14,7 @@
                     />
 
                     <l-marker
-                        v-for="report in filteredReports"
+                        v-for="report in filteredReportsWithLocation"
                         :key="report.id"
                         :lat-lng="[report.lat, report.lng]"
                         :icon="getIcon(report.type)" 
@@ -22,10 +22,10 @@
                         <l-popup :options="{ autoPan: true, closeButton: true }">
                             <div class="popup-card">
                                 <h3>{{ report.type }}</h3>
-                                <p><strong>Location:</strong> {{ report.area }}</p>
-                                <p><strong>Severity:</strong> {{ report.severity }}</p>
-                                <p><strong>Status:</strong> {{ report.status }}</p>
-                                <p><strong>Votes:</strong> {{ report.votes }}</p>
+                                <p><strong>Location:</strong> {{ report.area || 'Not specified' }}</p>
+                                <p><strong>Severity:</strong> {{ report.severity || 'N/A' }}</p>
+                                <p><strong>Status:</strong> {{ report.status || 'pending' }}</p>
+                                <p><strong>Votes:</strong> {{ report.voteCount || report.votes || 0 }}</p>
                             </div>
                         </l-popup>
                     </l-marker>
@@ -55,7 +55,21 @@
                             <option value="votes">Most Voted</option>
                             <option value="recent">Most Recent</option>
                         </select>
+
+                        <button
+                            class="report-issue-btn"
+                            @click="showReportModal = true"
+                        >
+                            Report an Issue
+                        </button>
                     </div>
+                </div>
+                
+                <div v-if="!reports.length" class="no-reports">
+                    <p>No reports found yet. Be the first to report an issue!</p>
+                </div>
+                <div v-else-if="filteredReports.length === 0" class="no-reports">
+                    <p>No matching reports — try changing filters</p>
                 </div>
 
                 <div class="reports-grid">
@@ -63,28 +77,34 @@
                         v-for="report in filteredReports" 
                         :key="report.id"
                         class="report-card"
-                        @click="openPopup(report)"
+                        @click="selectedReport = report"
                     >
                         <div class="card-header">
                             <span class="type-badge" :style="{ backgroundColor: getIconColor(report.type) }">
-                                {{ report.type }}
+                                {{ report.type || report.title?.slice(0, 20) || 'Report' }}
                             </span>
                             <span class="status-badge" :class="report.status.toLowerCase().replace(' ', '-')">
                                 {{ report.status }}
                             </span>
                         </div>
 
-                        <h4>{{ report.area }}</h4>
+                        <h4>{{ formatArea(report.area) }}</h4>
                         <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
                         
                         <div class="vote-section">
                             <button 
-                                class="vote-btn"
+                                class="vote-btn upvote-btn"
                                 @click.stop="upvote(report)"
                             >
-                                ▲ Upvote
+                                Upvote
                             </button>
-                            <span class="vote-count">{{ report.votes }} votes</span>
+                            <button 
+                                class="vote-btn downvote-btn"
+                                @click.stop="removeUpvote(report)"
+                            >
+                                Downvote
+                            </button>
+                            <span class="vote-count">{{ report.voteCount || report.votes || 0 }} votes</span>
                         </div>
 
                         <small class="timestamp">
@@ -98,6 +118,118 @@
                     <p>Click to view full archive →</p>
                 </div>
             </div>
+
+
+            <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
+                <div class="modal-content">
+                    <h3>Report a New Issue</h3>
+                    <form @submit.prevent="createReport">
+                        <div class="form-group">
+                            <label>Type of Issue *</label>
+                            <div class="type-options">
+                                <button
+                                    v-for="type in disasterTypes"
+                                    :key="type"
+                                    type="button"
+                                    class="type-btn"
+                                    :class="{ 'selected': newReport.type === type }"
+                                    @click="newReport.type = type"
+                                >
+                                    {{ type }}
+                                </button>
+                            </div>
+                            <div v-if="newReport.type === 'Other'" class="other-input">
+                                <input
+                                    v-model="newReport.customType"
+                                    type="text"
+                                    placeholder="Please specify the issue..."
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Severity *</label>
+                            <div class="severity-options">
+                                <label class="severity-btn" :class="{ 'selected': newReport.severity === 'Low' }">
+                                <input
+                                    type="radio"
+                                    v-model="newReport.severity"
+                                    value="Low"
+                                    required
+                                />
+                                    Low
+                                </label>
+                                <label class="severity-btn" :class="{ 'selected': newReport.severity === 'Medium' }">
+                                <input
+                                    type="radio"
+                                    v-model="newReport.severity"
+                                    value="Medium"
+                                />
+                                    Medium
+                                </label>
+                                <label class="severity-btn" :class="{ 'selected': newReport.severity === 'High' }">
+                                <input
+                                    type="radio"
+                                    v-model="newReport.severity"
+                                    value="High"
+                                />
+                                    High
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="title">Title / Short Description *</label>
+                            <input
+                                id="title"
+                                v-model="newReport.title"
+                                type="text"
+                                placeholder="e.g. Flooding near New Street Station"
+                                required
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Additional Details (optional)</label>
+                            <textarea
+                                id="description"
+                                v-model="newReport.description"
+                                rows="4"
+                                placeholder="More information, exact location, photos if available, etc..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" @click="showReportModal = false">
+                                Cancel
+                            </button>
+                            <button type="submit" class="submit-btn" :disabled="isSubmitting || !formIsValid">
+                                {{ isSubmitting ? 'Submitting...' : 'Submit Report' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div v-if="selectedReport" class="modal-overlay" @click.self="selectedReport = null">
+                <div class="modal-content">
+                    <h3>{{ selectedReport.title || selectedReport.type || 'Report Details' }}</h3>
+
+                    <p><strong>Area:</strong> {{ formatArea(selectedReport.area) }}</p>
+                    <p><strong>Type:</strong> {{ selectedReport.type || 'N/A' }}</p>
+                    <p><strong>Severity:</strong> {{ selectedReport.severity || 'N/A' }}</p>
+                    <p><strong>Status:</strong> {{ selectedReport.status || 'Pending' }}</p>
+                    <p><strong>Votes:</strong> {{ selectedReport.voteCount || selectedReport.votes || 0 }}</p>
+                    <p><strong>Description:</strong> {{ selectedReport.description || 'No description provided.' }}</p>
+
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" @click="selectedReport = null">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>
@@ -109,6 +241,7 @@ import * as L from 'leaflet'
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet"
 import "leaflet/dist/leaflet.css"
 
+const selectedReport = ref(null)
 const API = `${import.meta.env.VITE_API_URL}/api/v1`
 const NEIGHBOURHOOD_ID = 1
 
@@ -121,38 +254,170 @@ const searchTerm = ref('')
 const filterType = ref('')
 const sortBy = ref('votes')
 
-async function fetchReports() {
-    try {
-        const res = await fetch(`${API}/reports?neighbourhoodId=${NEIGHBOURHOOD_ID}`, {
-            credentials: 'include'
-        })
-        if (!res.ok) throw new Error('API not ready')
+const showReportModal = ref(false)
+const isSubmitting = ref(false)
 
-        let apiReports = await res.json()
-        if (apiReports && apiReports.length > 0) {
-            reports.value = apiReports.map(r => ({
-                id: r.reportId,
-                lat: 52.4862 + (Math.random() - 0.5) * 0.07,
-                lng: -1.8904 + (Math.random() - 0.5) * 0.07,
-                type: r.title || 'Community Report',
-                area: 'West Midlands',
-                severity: 'Medium',
-                status: r.status === 'in_progress' 
-                    ? 'In Progress' 
-                    : r.status.charAt(0).toUpperCase() + r.status.slice(1),
-                votes: r.voteCount || 0,
-                timestamp: r.createdAt * 1000 || Date.now()
-            }))
-            return
-        }
-    } catch (err) {
-        console.warn('backend not responding, using demo data')
-    }
-    generateReports()
+const newReport = ref({
+    type: '',
+    customType: '',
+    severity: '',
+    title: '',
+    description: ''
+})
+
+const areaCoordinates = {
+    Greater_London: [51.5074, -0.1278],
+    Birmingham: [52.4862, -1.8904],
+    Manchester: [53.4808, -2.2426]
 }
 
-function upvote(report) {
-    report.votes++
+function formatArea(area) {
+    if (!area) return 'Unknown area'
+    return area.replace(/_/g, ' ')
+}
+const formIsValid = computed(() => {
+    const hasType = newReport.value.type && 
+                    (newReport.value.type !== 'Other' || newReport.value.customType.trim())
+    return (
+        hasType &&
+        newReport.value.severity &&
+        newReport.value.title.trim()
+    )
+})
+
+async function fetchReports() {
+    try {
+        const res = await fetch(`${API}/reports/overview?neighbourhoodId=${NEIGHBOURHOOD_ID}`, {
+            credentials: 'include'
+        })
+
+        if (!res.ok) throw new Error('Failed to fetch overview')
+
+        const apiReports = await res.json()
+        console.log('API reports:', apiReports)
+        reports.value = apiReports.map(report => {
+            const fallback = areaCoordinates[report.area] || null
+
+            return {
+                ...report,
+                lat: report.lat != null
+                    ? Number(report.lat)
+                    : fallback
+                        ? fallback[0]
+                        : null,
+                lng: report.lng != null
+                    ? Number(report.lng)
+                    : fallback
+                        ? fallback[1]
+                        : null
+            }
+        })
+
+        console.log(`Loaded ${apiReports.length} reports from /overview`)
+        return
+    } catch (err) {
+        console.warn('Backend not responding, using demo data →', err.message)
+        generateReports()
+    }
+}
+
+async function upvote(report) {
+    const id = report.reportId || report.id
+    if (!id) return
+    try {
+        const res = await fetch(`${API}/reports/upvote`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reportId: id })
+        })
+
+        if (res.ok) {
+            report.votes = (report.votes || 0) + 1
+        } else if (res.status === 401) {
+            alert('Please log in to vote')
+        }
+    } catch (err) {
+        console.error('Upvote failed', err)
+    }
+}
+
+async function removeUpvote(report) {
+    const id = report.reportId || report.id
+    if (!id) return
+    try {
+        const res = await fetch(`${API}/reports/upvote/remove`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reportId: id })
+        })
+
+        if (res.ok && (report.votes || 0) > 0) {
+            report.votes--
+        } else if (res.status === 401) {
+            alert('Please log in to vote')
+        }
+    } catch (err) {
+        console.error('Remove vote failed', err)
+    }
+}
+
+async function createReport() {
+    if (!formIsValid.value) return
+
+    isSubmitting.value = true
+
+    const finalType =
+        newReport.value.type === 'Other'
+            ? (newReport.value.customType.trim() || 'Other')
+            : newReport.value.type
+
+    const payload = {
+        neighbourhoodId: NEIGHBOURHOOD_ID,
+        title: newReport.value.title.trim(),
+        description: newReport.value.description.trim(),
+        severity: newReport.value.severity,
+        type: finalType
+    }
+
+    console.log('Sending report payload:', payload)
+
+    try {
+        const res = await fetch(`${API}/reports/create`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+
+        const data = await res.json().catch(() => ({}))
+        console.log('Create report response:', res.status, data)
+
+        if (res.ok) {
+            alert('Report submitted successfully!')
+            showReportModal.value = false
+            newReport.value = {
+                type: '',
+                customType: '',
+                severity: '',
+                title: '',
+                description: ''
+            }
+            await fetchReports()
+        } else if (res.status === 401) {
+            alert('Please log in to report an issue')
+        } else {
+            alert(data.message || `Failed to submit report (${res.status})`)
+        }
+    } catch (err) {
+        console.error('Report creation failed', err)
+        alert('Something went wrong. Please try again.')
+    } finally {
+        isSubmitting.value = false
+    }
 }
 
 //demo data
@@ -190,24 +455,37 @@ function generateReports() {
 }
 
 const filteredReports = computed(() => {
-    let result = reports.value.filter(report => {
-        const matchesSearch = 
-            !searchTerm.value ||
-            report.area.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            report.type.toLowerCase().includes(searchTerm.value.toLowerCase())
-        
-        const matchesType = !filterType.value || report.type === filterType.value
-        
-        return matchesSearch && matchesType
-    })
+    let filtered = [...reports.value]
 
-    if (sortBy.value === 'votes') {
-        result.sort((a, b) => b.votes - a.votes)
-    } else {
-        result.sort((a, b) => b.timestamp - a.timestamp)
+    if (searchTerm.value.trim()) {
+        const term = searchTerm.value.toLowerCase().trim()
+        filtered = filtered.filter(report =>
+            (report.area?.toLowerCase() || '').includes(term) ||
+            (report.type?.toLowerCase() || '').includes(term) ||
+            (report.title?.toLowerCase() || '').includes(term)
+        )
     }
 
-    return result
+    if (filterType.value) {
+        filtered = filtered.filter(report => report.type === filterType.value)
+    }
+
+    if (sortBy.value === 'votes') {
+        filtered.sort((a, b) => (b.voteCount || b.votes || 0) - (a.voteCount || a.votes || 0))
+    } else if (sortBy.value === 'recent') {
+        filtered.sort((a, b) => (new Date(b.createdAt || b.date_submitted) - new Date(a.createdAt || a.date_submitted)))
+    }
+
+    return filtered
+})
+
+const filteredReportsWithLocation = computed(() => {
+    return filteredReports.value.filter(report =>
+        typeof report.lat === 'number' &&
+        typeof report.lng === 'number' &&
+        !isNaN(report.lat) &&
+        !isNaN(report.lng)
+  )
 })
 
 const resolvedReports = computed(() => 
@@ -242,24 +520,33 @@ function getIcon(type) {
     return iconCache[type]
 }
 
+function openPopup(report) {
+    if (!report || typeof report.lat !== 'number' || typeof report.lng !== 'number') return
+
+    const map = mapRef.value?.leafletObject
+    if (!map) return
+
+    map.setView([report.lat, report.lng], 13, { animate: true })
+
+    setTimeout(() => {
+        map.eachLayer((layer) => {
+            if (
+                layer instanceof L.Marker &&
+                layer.getLatLng().lat === report.lat &&
+                layer.getLatLng().lng === report.lng
+            ) {
+                layer.openPopup()
+            }
+        })
+    }, 200)
+}
+
 onMounted(() => {
     fetchReports()
 })
 </script>
 
 <style scoped>
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
 .report-page {
     width: 100%;
     height: 100vh;
@@ -270,6 +557,7 @@ onMounted(() => {
 
 .map-container {
     height: 60vh;
+    min-height: 400px;
     position: relative;
 }
 
@@ -300,16 +588,41 @@ onMounted(() => {
     color: #1e293b;
 }
 
+.no-reports {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
 .controls {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
-.search-input, .filter-select {
+.search-input,
+.filter-select {
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 0.95rem;
+}
+
+.report-issue-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.report-issue-btn:hover {
+    background: #059669;
 }
 
 .reports-grid {
@@ -354,25 +667,96 @@ onMounted(() => {
     font-size: 0.82rem;
     font-weight: 500;
 }
-.status-badge.pending { background: #fbbf24; color: #78350f; }
+
+.type-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.type-btn {
+    padding: 8px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.15s;
+}
+
+.type-btn.selected {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.other-input {
+    margin-top: 12px;
+}
+
+.other-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+.severity-options {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0;
+}
+
+.severity-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.severity-btn.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.severity-btn input {
+    margin: 0;
+}
+
+.status-badge.pending     { background: #fbbf24; color: #78350f; }
 .status-badge.in-progress { background: #60a5fa; color: white; }
-.status-badge.resolved { background: #34d399; color: white; }
+.status-badge.resolved    { background: #34d399; color: white; }
 
 .vote-section {
     margin-top: 12px;
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .vote-btn {
-    background: #3b82f6;
     color: white;
     border: none;
     padding: 6px 14px;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
+}
+
+.upvote-btn {
+    background: #3b82f6;
+}
+
+.downvote-btn {
+    background: #ef4444;
 }
 
 .vote-count {
@@ -383,6 +767,8 @@ onMounted(() => {
 .timestamp {
     color: #64748b;
     font-size: 0.85rem;
+    display: block;
+    margin-top: 8px;
 }
 
 .resolved-teaser {
@@ -392,6 +778,81 @@ onMounted(() => {
     border-radius: 8px;
     text-align: center;
     color: #475569;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+    margin: 0 0 20px;
+    color: #1e293b;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.cancel-btn {
+    background: #e2e8f0;
+    color: #475569;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.submit-btn:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
 }
 
 .popup-card {
