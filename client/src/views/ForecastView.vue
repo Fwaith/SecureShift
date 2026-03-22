@@ -296,7 +296,6 @@ input[type="number"]:focus {
     border: none;
     border-radius: 10px;
     padding: 13px 26px;
-    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s, transform 0.15s, opacity 0.2s;
@@ -310,7 +309,6 @@ input[type="number"]:focus {
     border: 1.0px solid #e2e8f0;
     border-radius: 10px;
     padding: 12px 20px;
-    font-size: 0.9rem;
     color: #64748b;
     cursor: pointer;
     transition: border-color 0.2s, color 0.2s;
