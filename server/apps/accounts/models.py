@@ -2,6 +2,23 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.apps import apps
 
+def _extract_outcode(postcode):
+	if not postcode:
+		return None
+
+	normalized = postcode.strip().upper()
+	if not normalized:
+		return None
+
+	parts = normalized.split()
+	if len(parts) > 1:
+		return parts[0]
+
+	compact = "".join(parts)
+	if len(compact) > 3:
+		return compact[:-3]
+
+	return compact
 
 class User(AbstractUser):
     # Instead of making a verified: bool field, we just use is_active (default field) to indicate if the user has verified their email.
@@ -35,7 +52,7 @@ class User(AbstractUser):
     # In which user's neighbourhood was simply a strng
     def save(self, *args, **kwargs):
         # CLean postcode
-        postcode = self.postcode.strip().upper()
+        postcode = _extract_outcode(self.postcode)
         self.postcode = postcode
 
         if postcode:
