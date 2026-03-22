@@ -1,11 +1,6 @@
 from django.db import models
 
 class Report(models.Model):
-    STATUS_CHOICES = [
-        ("Pending", "Pending"),
-        ("In Progress", "In Progress"),
-        ("Resolved", "Resolved"),
-    ]
     report_id = models.AutoField(primary_key=True)
     neighbourhood = models.ForeignKey("habitability.Neighborhood", on_delete=models.CASCADE, related_name="reports")
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="reports")
