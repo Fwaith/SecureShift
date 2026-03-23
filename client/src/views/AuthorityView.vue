@@ -78,7 +78,8 @@
 
 <script setup>
 import AppLayout from "../components/AppLayout.vue"
-import { ref, computed } from "vue"
+import { ref, computed, onMounted } from "vue"
+import api from "../services/api"
 const accessLevels = [
     { value: "user",  label: "User"  },
     { value: "admin", label: "Admin" }
@@ -90,13 +91,7 @@ const levelMeta = {
 }
  
 
- /* these are the placeholders, feel free to change them according to backend stuff */
-const authorities = ref([
-    { id: 1, name: "Alice", level: "admin"   },
-    { id: 2, name: "Bob", level: "user"  },
-    { id: 3, name: "Clarke", level: "admin" },
-    { id: 4, name: "Dave", level: "user"  }
-])
+const authorities = ref([])
  
 const newAuthority = ref({ name: "", role: "", level: "" })
 const editing      = ref(null)
@@ -104,6 +99,26 @@ const editing      = ref(null)
 const canGrant = computed(() =>
     newAuthority.value.name.trim() && newAuthority.value.role.trim() && newAuthority.value.level
 )
+
+async function loadAuthorities() {
+    try {
+        const response = await api.get("/users")
+        const users = Array.isArray(response.data) ? response.data : []
+
+        authorities.value = users.map((user) => ({
+            id: user.id,
+            name: user.username,
+            level: user.level,
+        }))
+    } catch (error) {
+        console.error("Failed to load users", error)
+        authorities.value = []
+    }
+}
+
+onMounted(() => {
+    loadAuthorities()
+})
  
 function grantAccess() {
     if (!canGrant.value) return
