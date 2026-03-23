@@ -1,41 +1,48 @@
 from django.db import models
 from django.db.models import F     # refers to model field value directly in database
-import pgeocode
-import requests
 
-def _lookup_coordinates_from_postcode(postcode):
-    if not postcode:
-        return None, None
 
-    result = pgeocode.Nominatim("gb").query_postal_code(postcode)
-    latitude = getattr(result, "latitude", None)
-    longitude = getattr(result, "longitude", None)
-
-    latitude = float(latitude)
-    longitude = float(longitude)
-
-    return latitude, longitude
-
-def _lookup_county_from_postcode(postcode):
-    """Look up county from UK postcode using postcodes.io API"""
+def _extract_outcode(postcode):
     if not postcode:
         return None
-    
+
+    normalized = postcode.strip().upper()
+    if not normalized:
+        return None
+
+    parts = normalized.split()
+    if len(parts) > 1:
+        return parts[0]
+
+    compact = "".join(parts)
+    if len(compact) > 3:
+        return compact[:-3]
+
+    return compact
+
+def _lookup_coordinates_from_postcode(postcode):
+    outcode = _extract_outcode(postcode)
+    if not outcode:
+        return None, None
+
     try:
-        response = requests.get(f"https://api.postcodes.io/outcodes/{postcode}")
-        print(f"URL: https://api.postcodes.io/outcodes/{postcode} - Status: {response.status_code}")
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('result'):
-                # postcodes.io returns 'county' or 'admin_county'
-                county = data['result'].get('county') or data['result'].get('admin_county')
-                print(f"DEBUG: Postcode {postcode} maps to county: {county}")
-                return county
-        else:
-            print(f"ERR: postcodes.io returned status {response.status_code} for {postcode}")
-    except Exception as e:
-        print(f"ERR: postcodes.io lookup failed for {postcode}: {str(e)}")
-    
+        mapping = OutcodeCountyMapping.objects.get(outcode=outcode)
+        return mapping.lat, mapping.lon
+    except OutcodeCountyMapping.DoesNotExist:
+        return None, None
+
+def _lookup_county_from_postcode(postcode):
+    """Look up county from UK postcode outcode mapping table."""
+    outcode = _extract_outcode(postcode)
+    if not outcode:
+        return None
+
+    try:
+        mapping = OutcodeCountyMapping.objects.get(outcode=outcode)
+        return mapping.county
+    except OutcodeCountyMapping.DoesNotExist:
+        return None
+
     return None
 
 class Region(models.Model):
@@ -79,7 +86,7 @@ class Neighborhood(models.Model):
                 county = _lookup_county_from_postcode(self.postcode)
                 if county:
                     try:
-                        self.region = Region.objects.get(region_name=county[0])
+                        self.region = Region.objects.get(region_name=county)
                         print(f"DEBUG: Assigned region '{county}' to postcode {self.postcode}")
                     except Region.DoesNotExist:
                         print(f"ERR: Region '{county}' not found in database for postcode {self.postcode}")
