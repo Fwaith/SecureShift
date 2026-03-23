@@ -9,9 +9,9 @@
 
         <nav class="nav">
             <router-link to="/home" class="nav-link">Home</router-link>
-            <router-link to="/reports" class="nav-link">Reports</router-link>
+            <router-link to="/habitability-score" class="nav-link">Habitability</router-link>
             <router-link to="/forecast" class="nav-link">Forecast</router-link>
-            <router-link to="/habitability-score" class="nav-link">Habitability Scores</router-link>
+            <router-link to="/reports" class="nav-link">Reports</router-link>
             <router-link v-if="showAuthorityLink" to="/authority" class="nav-link">Authority</router-link>
         </nav>
 
