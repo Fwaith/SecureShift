@@ -18,7 +18,6 @@
                         <span class="level-badge" :class="`badge-${authority.level}`">{{ levelMeta[authority.level].label }}</span>
                     </div>
                     <h3>{{ authority.name }}</h3>
-                    <p class="authority-role">{{ authority.role }}</p>
                     <div class="permissions">
                         <div v-for="perm in levelMeta[authority.level].permissions" :key="perm" class="permission-tag">
                             {{ perm }}
@@ -81,10 +80,8 @@
 import AppLayout from "../components/AppLayout.vue"
 import { ref, computed } from "vue"
 const accessLevels = [
-    { value: "viewer",  label: "Viewer"  },
-    { value: "analyst", label: "Analyst" },
-    { value: "editor",  label: "Editor"  },
-    { value: "admin",   label: "Admin"   }
+    { value: "user",  label: "User"  },
+    { value: "admin", label: "Admin" }
 ]
  
 const levelMeta = {
@@ -95,10 +92,10 @@ const levelMeta = {
 
  /* these are the placeholders, feel free to change them according to backend stuff */
 const authorities = ref([
-    { id: 1, name: "Alice",   role: "Lead Analyst",       level: "admin"   },
-    { id: 2, name: "Bob", role: "Environmental Eng.", level: "editor"  },
-    { id: 3, name: "Clarke",     role: "Data Reviewer",      level: "analyst" },
-    { id: 4, name: "Dave",     role: "Observer",           level: "viewer"  }
+    { id: 1, name: "Alice", level: "admin"   },
+    { id: 2, name: "Bob", level: "user"  },
+    { id: 3, name: "Clarke", level: "admin" },
+    { id: 4, name: "Dave", level: "user"  }
 ])
  
 const newAuthority = ref({ name: "", role: "", level: "" })
@@ -195,6 +192,7 @@ function saveEdit() {
 .badge-viewer  { background: #e0f2fe; color: #0369a1; }
 .badge-analyst { background: #fef9c3; color: #854d0e; }
 .badge-editor  { background: #ede9fe; color: #6d28d9; }
+.badge-user    { background: #e2e8f0; color: #334155; }
 .badge-admin   { background: #fee2e2; color: #b91c1c; }
  
 .authority-card h3 {
