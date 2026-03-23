@@ -88,9 +88,7 @@ const accessLevels = [
 ]
  
 const levelMeta = {
-    viewer:  { label: "Viewer",  permissions: ["View Reports", "View Forecasts"] },
-    analyst: { label: "Analyst", permissions: ["View Reports", "View Forecasts", "Run Analysis"] },
-    editor:  { label: "Editor",  permissions: ["View Reports", "View Forecasts", "Run Analysis", "Edit Records"] },
+    user:  { label: "User",  permissions: ["View Reports", "View Forecasts"] },
     admin:   { label: "Admin",   permissions: ["View Reports", "View Forecasts", "Run Analysis", "Edit Records", "Manage Users"] }
 }
  
