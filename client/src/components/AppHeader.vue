@@ -1,8 +1,11 @@
 <template>
     <header class="header">
-        <router-link to="/home" class="logo-text">
-            SecureShift
-        </router-link>
+        <div class="logo">
+            <router-link to="/home" class="logo-link">
+                <img src="/logo.svg" alt="Logo" class="logo-image"/>
+                <span class="logo-text">SecureShift</span>
+            </router-link>
+        </div>
 
         <nav class="nav">
             <router-link to="/home" class="nav-link">Home</router-link>
@@ -12,9 +15,15 @@
             <router-link v-if="showAuthorityLink" to="/authority" class="nav-link">Authority</router-link>
         </nav>
 
-        <button @click="openAccessibility" class="accessibility-button">
-            Accessibility
-        </button>
+        <div class="button-group">
+            <button @click="$router.push('/login')" class="login-button">
+                Login
+            </button>
+            <span class="divider"></span>
+            <button @click="openAccessibility" class="accessibility-button">
+                <img src="/accessibility-logo-light.svg" alt="Accessibility Logo" class="accessibility-logo"/>
+            </button>
+        </div>
     </header>
 </template>
 
@@ -52,41 +61,108 @@ watch(
 <style scoped>
 .header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 40px;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    position: sticky;
+    padding: 0.5rem 3rem;
+    background: var(--background);
+    border-bottom: 1px solid var(--on-background);
+    position: static;
     top: 0;
-    z-index: 10;
+    z-index: auto;
+}
+
+.logo {
+    display: flex;
+    justify-content: left;
+    flex: 1;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo-image {
+    width: auto;
+    height: 2rem;
 }
 
 .logo-text {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1e293b;
+    font-size: 1.75rem;
+    font-weight: 300;
+    color: var(--on-background);
     text-decoration: none;
 }
 
 .nav {
     display: flex;
-    gap: 24px;
+    margin: 0 auto;
+    gap: 1.5rem;
+    justify-content: center;
+    margin: 0 1rem;
 }
 
 .nav-link {
     text-decoration: none;
-    color: #475569;
+    font-size: 0.9rem;
+    color: var(--on-background);
     font-weight: 500;
 }
 
-.accessibility-button {
-    background: #64748b;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 9999px;
+.nav-link:hover {
+    filter: brightness(2.5);
+}
+
+.button-group {
+    display: flex;
+    flex: 1;
+    gap: 1rem;
+    justify-content: right;
+    align-items: center;
+}
+
+.login-button {
     cursor: pointer;
-    font-weight: 600;
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    width: 5rem;
+    height: 2rem;
+}
+
+.login-button:hover {
+    filter: brightness(0.85);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(var(--shadow), var(--shadow-alpha));
+}
+
+.divider {
+    width: 1px;
+    height: 2rem;
+    background-color: var(--on-background);
+    display: inline-block;
+}
+
+.accessibility-button {
+    display: flex;
+    padding: 0;
+    border: none;
+    background-color: rgba(0, 0, 0, 0);
+    margin: 0;
+    cursor: pointer;
+}
+
+.accessibility-logo {
+    width: 2.5rem;
+    height: auto;
+}
+
+.accessibility-button:hover {
+    filter: brightness(0.85);
+    transform: translateY(-2px);
 }
 </style>

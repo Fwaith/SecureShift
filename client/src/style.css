@@ -1,18 +1,30 @@
 @import 'leaflet/dist/leaflet.css';
 
 :root {
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: 'Montserrat', sans-serif;
     line-height: 1.5;
     font-weight: 400;
 
-    color: #213547;
-    background-color: #ffffff;
+    --primary: #58CD36;
+    --on-primary: #FFFFFF;
+    --container: #BCE6B0;
+    --on-container: #16330D;
+    --background: #fcfcfc;
+    --on-background: #323331;
+    --outline: #889982;
+    --shadow: 0, 0, 0;
+    --shadow-alpha: 0.25;
+
+    color: var(--on-background);
+    background-color: var(--background);
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+.dark {}
 
 * {
     box-sizing: border-box;
