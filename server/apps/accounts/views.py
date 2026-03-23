@@ -354,4 +354,37 @@ def users_me(request):
             "email": user.email,
             "phoneNumber": user.phone_number,
             "postcode": user.postcode,
+            "is_admin": user.is_admin,
         })
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def users_list(request):
+    """GET /api/v1/users"""
+    user = get_authenticated_user(request)
+    if not user:
+        return JsonResponse(
+            {"error": "NOT_AUTHENTICATED", "message": "You must be logged in."},
+            status=401,
+        )
+
+    if not user.is_admin:
+        return JsonResponse(
+            {"error": "FORBIDDEN", "message": "Admin access is required."},
+            status=403,
+        )
+
+    users = User.objects.all().order_by("id")
+    payload = [
+        {
+            "id": each_user.pk,
+            "username": each_user.username,
+            "email": each_user.email,
+            "level": "admin" if each_user.is_admin else "user",
+        }
+        for each_user in users
+    ]
+
+    # We're returning a list, bc default behaviour of JsonResponse is to expect a dict
+    # But Haider has already made the FE expect a list
+    return JsonResponse(payload, safe=False)
