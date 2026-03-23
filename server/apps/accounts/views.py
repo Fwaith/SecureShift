@@ -388,3 +388,75 @@ def users_list(request):
     # We're returning a list, bc default behaviour of JsonResponse is to expect a dict
     # But Haider has already made the FE expect a list
     return JsonResponse(payload, safe=False)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def promote_user(request, user_id):
+    """POST /api1/v1/users/{id}/promote"""
+    current_user = get_authenticated_user(request)
+    if not current_user:
+        return JsonResponse(
+            {"error": "NOT_AUTHENTICATED", "message": "You must be logged in."},
+            status=401,
+        )
+
+    if not current_user.is_admin:
+        return JsonResponse(
+            {"error": "FORBIDDEN", "message": "Admin access is required."},
+            status=403,
+        )
+
+    try:
+        target_user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return JsonResponse(
+            {"error": "NOT_FOUND", "message": "User not found."},
+            status=404,
+        )
+
+    target_user.is_admin = True
+    target_user.save(update_fields=["is_admin"])
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "User promoted to admin.",
+        }
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def demote_user(request, user_id):
+    """POST /api1/v1/users/{id}/demote"""
+    current_user = get_authenticated_user(request)
+    if not current_user:
+        return JsonResponse(
+            {"error": "NOT_AUTHENTICATED", "message": "You must be logged in."},
+            status=401,
+        )
+
+    if not current_user.is_admin:
+        return JsonResponse(
+            {"error": "FORBIDDEN", "message": "Admin access is required."},
+            status=403,
+        )
+
+    try:
+        target_user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return JsonResponse(
+            {"error": "NOT_FOUND", "message": "User not found."},
+            status=404,
+        )
+
+    target_user.is_admin = False
+    target_user.save(update_fields=["is_admin"])
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "User demoted to user.",
+        }
+    )
