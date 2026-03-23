@@ -9,7 +9,7 @@
             <router-link to="/reports" class="nav-link">Reports</router-link>
             <router-link to="/forecast" class="nav-link">Forecast</router-link>
             <router-link to="/habitability-score" class="nav-link">Habitability Scores</router-link>
-            <router-link to="/authority" class="nav-link">Authority</router-link>
+            <router-link v-if="showAuthorityLink" to="/authority" class="nav-link">Authority</router-link>
         </nav>
 
         <button @click="openAccessibility" class="accessibility-button">
@@ -19,9 +19,34 @@
 </template>
 
 <script setup>
+import { onMounted, ref, watch } from "vue"
+import { useRoute } from "vue-router"
 import { useAccessibility } from "../composables/useAccessibility"
+import api from "../services/api"
 
 const { openAccessibility } = useAccessibility()
+const route = useRoute()
+const showAuthorityLink = ref(false)
+
+async function refreshAuthorityVisibility() {
+    try {
+        const response = await api.get("/users/me")
+        showAuthorityLink.value = response?.data?.is_admin === true
+    } catch {
+        showAuthorityLink.value = false
+    }
+}
+
+onMounted(() => {
+    refreshAuthorityVisibility()
+})
+
+watch(
+    () => route.fullPath,
+    () => {
+        refreshAuthorityVisibility()
+    }
+)
 </script>
 
 <style scoped>
