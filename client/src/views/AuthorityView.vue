@@ -24,8 +24,20 @@
                         </div>
                     </div>
                     <div class="card-actions">
-                        <button class="btn-edit" @click="openEdit(authority)">Edit Access</button>
-                        <button class="btn-revoke" @click="revoke(authority)">Revoke</button>
+                        <button
+                            v-if="authority.level === 'admin'"
+                            class="btn-revoke"
+                            @click="revoke(authority)"
+                        >
+                            Revoke
+                        </button>
+                        <button
+                            v-else
+                            class="btn-edit"
+                            @click="promote(authority)"
+                        >
+                            Promote
+                        </button>
                     </div>
                 </div>
             </section>
@@ -132,7 +144,11 @@ function grantAccess() {
 }
  
 function revoke(authority) {
-    authorities.value = authorities.value.filter(a => a.id !== authority.id)
+    
+}
+ 
+function promote(authority) {
+    
 }
  
 function openEdit(authority) {
