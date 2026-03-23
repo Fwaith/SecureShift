@@ -14,7 +14,7 @@
                             id="left-postcode"
                             v-model="leftPostcode"
                             type="text"
-                            placeholder="e.g. B1 1AA"
+                            placeholder="e.g. CO7 0SH"
                             :disabled="loading"
                         />
                         <p v-if="leftError" class="error-text">{{ leftError }}</p>
@@ -32,7 +32,7 @@
                             id="right-postcode"
                             v-model="rightPostcode"
                             type="text"
-                            placeholder="e.g. CV1 2WT"
+                            placeholder="e.g. DE56 4BG"
                             :disabled="loading"
                         />
                         <p v-if="rightError" class="error-text">{{ rightError }}</p>
@@ -61,8 +61,7 @@
                     >
                         <div class="value-cell left-value">{{ formatValue(leftResult?.[metric.key]) }}</div>
                         <div class="indicator-cell" :class="indicatorClass(metric)">
-                            <span class="indicator-sign">{{ getIndicator(metric) }}</span>
-                            <span class="metric-name">{{ metric.label }}</span>
+                            <span class="indicator-label">{{ getIndicatorLabel(metric) }}</span>
                         </div>
                         <div class="value-cell right-value">{{ formatValue(rightResult?.[metric.key]) }}</div>
                     </div>
@@ -193,18 +192,18 @@ function compareMetric(metric, leftValue, rightValue) {
     return leftBetter ? "left" : "right"
 }
 
-function getIndicator(metric) {
+function getIndicatorLabel(metric) {
     const outcome = compareMetric(metric, leftResult.value?.[metric.key], rightResult.value?.[metric.key])
     if (outcome === "left") {
-        return "<"
+        return `< ${metric.label}`
     }
     if (outcome === "right") {
-        return ">"
+        return `${metric.label} >`
     }
     if (outcome === "equal") {
-        return "="
+        return `= ${metric.label} =`
     }
-    return "-"
+    return metric.label
 }
 
 function indicatorClass(metric) {
@@ -425,13 +424,9 @@ async function comparePostcodes() {
     background: #ffffff;
 }
 
-.indicator-sign {
-    font-size: 1.2rem;
-    font-weight: 800;
-}
-
-.metric-name {
-    font-weight: 600;
+.indicator-label {
+    font-size: 1rem;
+    font-weight: 700;
 }
 
 .winner-left {
