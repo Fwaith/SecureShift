@@ -18,15 +18,26 @@
                         <span class="level-badge" :class="`badge-${authority.level}`">{{ levelMeta[authority.level].label }}</span>
                     </div>
                     <h3>{{ authority.name }}</h3>
-                    <p class="authority-role">{{ authority.role }}</p>
                     <div class="permissions">
                         <div v-for="perm in levelMeta[authority.level].permissions" :key="perm" class="permission-tag">
                             {{ perm }}
                         </div>
                     </div>
                     <div class="card-actions">
-                        <button class="btn-edit" @click="openEdit(authority)">Edit Access</button>
-                        <button class="btn-revoke" @click="revoke(authority)">Revoke</button>
+                        <button
+                            v-if="authority.level === 'admin'"
+                            class="btn-revoke"
+                            @click="revoke(authority)"
+                        >
+                            Revoke
+                        </button>
+                        <button
+                            v-else
+                            class="btn-edit"
+                            @click="promote(authority)"
+                        >
+                            Promote
+                        </button>
                     </div>
                 </div>
             </section>
@@ -79,29 +90,20 @@
 
 <script setup>
 import AppLayout from "../components/AppLayout.vue"
-import { ref, computed } from "vue"
+import { ref, computed, onMounted } from "vue"
+import api from "../services/api"
 const accessLevels = [
-    { value: "viewer",  label: "Viewer"  },
-    { value: "analyst", label: "Analyst" },
-    { value: "editor",  label: "Editor"  },
-    { value: "admin",   label: "Admin"   }
+    { value: "user",  label: "User"  },
+    { value: "admin", label: "Admin" }
 ]
  
 const levelMeta = {
-    viewer:  { label: "Viewer",  permissions: ["View Reports", "View Forecasts"] },
-    analyst: { label: "Analyst", permissions: ["View Reports", "View Forecasts", "Run Analysis"] },
-    editor:  { label: "Editor",  permissions: ["View Reports", "View Forecasts", "Run Analysis", "Edit Records"] },
+    user:  { label: "User",  permissions: ["View Reports", "View Forecasts"] },
     admin:   { label: "Admin",   permissions: ["View Reports", "View Forecasts", "Run Analysis", "Edit Records", "Manage Users"] }
 }
  
 
- /* these are the placeholders, feel free to change them according to backend stuff */
-const authorities = ref([
-    { id: 1, name: "Alice",   role: "Lead Analyst",       level: "admin"   },
-    { id: 2, name: "Bob", role: "Environmental Eng.", level: "editor"  },
-    { id: 3, name: "Clarke",     role: "Data Reviewer",      level: "analyst" },
-    { id: 4, name: "Dave",     role: "Observer",           level: "viewer"  }
-])
+const authorities = ref([])
  
 const newAuthority = ref({ name: "", role: "", level: "" })
 const editing      = ref(null)
@@ -109,6 +111,39 @@ const editing      = ref(null)
 const canGrant = computed(() =>
     newAuthority.value.name.trim() && newAuthority.value.role.trim() && newAuthority.value.level
 )
+
+async function loadAuthorities() {
+    try {
+        const response = await api.get("/users")
+        const users = Array.isArray(response.data) ? response.data : []
+
+        authorities.value = users.map((user) => ({
+            id: user.id,
+            name: user.username,
+            level: user.level,
+        }))
+    } catch (error) {
+        console.error("Failed to load users", error)
+        authorities.value = []
+    }
+}
+
+onMounted(() => {
+    loadAuthorities()
+})
+
+function showApiError(error, fallbackMessage) {
+    const errorData = error?.response?.data
+    const errorCode = errorData?.error
+    const errorMessage = errorData?.message
+
+    if (errorCode || errorMessage) {
+        alert(`${errorCode || "ERROR"}: ${errorMessage || fallbackMessage}`)
+        return
+    }
+
+    alert(fallbackMessage)
+}
  
 function grantAccess() {
     if (!canGrant.value) return
@@ -121,8 +156,22 @@ function grantAccess() {
     newAuthority.value = { name: "", role: "", level: "" }
 }
  
-function revoke(authority) {
-    authorities.value = authorities.value.filter(a => a.id !== authority.id)
+async function revoke(authority) {
+    try {
+        await api.post(`/users/${authority.id}/demote`)
+        await loadAuthorities()
+    } catch (error) {
+        showApiError(error, "Failed to revoke admin access.")
+    }
+}
+ 
+async function promote(authority) {
+    try {
+        await api.post(`/users/${authority.id}/promote`)
+        await loadAuthorities()
+    } catch (error) {
+        showApiError(error, "Failed to promote user.")
+    }
 }
  
 function openEdit(authority) {
@@ -197,6 +246,7 @@ function saveEdit() {
 .badge-viewer  { background: #e0f2fe; color: #0369a1; }
 .badge-analyst { background: #fef9c3; color: #854d0e; }
 .badge-editor  { background: #ede9fe; color: #6d28d9; }
+.badge-user    { background: #e2e8f0; color: #334155; }
 .badge-admin   { background: #fee2e2; color: #b91c1c; }
  
 .authority-card h3 {

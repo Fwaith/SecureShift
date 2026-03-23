@@ -25,6 +25,7 @@ class User(AbstractUser):
     
     phone_number = models.CharField(max_length=20, blank=True, default='')
     postcode = models.CharField(max_length=10, blank=True, default='')
+    is_admin = models.BooleanField(default=False)
     neighborhood = models.ForeignKey(
         'habitability.Neighborhood',
         on_delete=models.SET_NULL,
