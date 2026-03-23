@@ -48,6 +48,18 @@ class Region(models.Model):
         return self.region_name
 
 
+class OutcodeCountyMapping(models.Model):
+    """Maps UK postcode outcodes to their corresponding counties."""
+    outcode = models.CharField(max_length=4, unique=True, primary_key=True)
+    county = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name_plural = "Outcode County Mappings"
+
+    def __str__(self):
+        return f"{self.outcode} -> {self.county}"
+
+
 class Neighborhood(models.Model):
     neighborhood_id = models.AutoField(primary_key=True)
     region = models.ForeignKey("Region", on_delete=models.CASCADE, related_name="neighborhoods", null=True, blank=True)
