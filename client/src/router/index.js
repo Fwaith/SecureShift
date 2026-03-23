@@ -6,6 +6,7 @@ import RegisterView from '../views/RegisterView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import ForecastView from '../views/ForecastView.vue'
 import AuthorityView from '../views/AuthorityView.vue'
+import HabitabilityScoreView from '../views/HabitabilityScoreView.vue'
 
 const routes = [
     { path: '/', redirect: '/login' },
@@ -14,6 +15,7 @@ const routes = [
     { path: '/home', name: 'home', component: HomeView },
     { path: '/reports', name: 'reports', component: ReportsView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
+    { path: '/habitability-score', name: 'habitability-score', component: HabitabilityScoreView },
     {
         path: '/authority',
         name: 'authority',
