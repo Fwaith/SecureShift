@@ -131,6 +131,19 @@ async function loadAuthorities() {
 onMounted(() => {
     loadAuthorities()
 })
+
+function showApiError(error, fallbackMessage) {
+    const errorData = error?.response?.data
+    const errorCode = errorData?.error
+    const errorMessage = errorData?.message
+
+    if (errorCode || errorMessage) {
+        alert(`${errorCode || "ERROR"}: ${errorMessage || fallbackMessage}`)
+        return
+    }
+
+    alert(fallbackMessage)
+}
  
 function grantAccess() {
     if (!canGrant.value) return
@@ -143,12 +156,22 @@ function grantAccess() {
     newAuthority.value = { name: "", role: "", level: "" }
 }
  
-function revoke(authority) {
-    
+async function revoke(authority) {
+    try {
+        await api.post(`/users/${authority.id}/demote`)
+        await loadAuthorities()
+    } catch (error) {
+        showApiError(error, "Failed to revoke admin access.")
+    }
 }
  
-function promote(authority) {
-    
+async function promote(authority) {
+    try {
+        await api.post(`/users/${authority.id}/promote`)
+        await loadAuthorities()
+    } catch (error) {
+        showApiError(error, "Failed to promote user.")
+    }
 }
  
 function openEdit(authority) {
