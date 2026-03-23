@@ -39,7 +39,7 @@ class Command(BaseCommand):
             with open(csv_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    outcode = row['outcode'].strip()
+                    outcode = row['postc'].strip()
                     county = row['county'].strip()
                     latitude = row['latitude'].strip()
                     longitude = row['longitude'].strip()
