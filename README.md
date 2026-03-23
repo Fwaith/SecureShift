@@ -30,3 +30,4 @@ Data can be hardcoded using fixtures in the fixtures dir in each app (not made y
 2. python manage.py migrate
 3. run `python manage.py import_habitability_data ./HabitabilityData.csv` from inside the `server` dir
 3. run `python manage.py create_admin_account` from inside the `server` dir
+3. run `python manage.py import_outcode_mappings` from inside the `server` dir

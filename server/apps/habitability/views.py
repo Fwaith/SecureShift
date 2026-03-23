@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import requests
 
-from .models import HabitabilityScores, Neighborhood, Region
+from .models import HabitabilityScores, Neighborhood, Region, OutcodeCountyMapping
 
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -37,27 +37,21 @@ def _extract_outcode(postcode):
 	return compact
 
 def _lookup_county_from_postcode(postcode):
-    """Look up county from UK postcode using postcodes.io API"""
-    outcode = _extract_outcode(postcode)
-    if not outcode:
-        return None
-    
-    try:
-        response = requests.get(f"https://api.postcodes.io/outcodes/{outcode}")
-        print(f"URL: https://api.postcodes.io/outcodes/{outcode} - Status: {response.status_code}")
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('result'):
-                # postcodes.io returns 'county' or 'admin_county'
-                county = data['result'].get('county') or data['result'].get('admin_county')
-                print(f"DEBUG: Postcode {outcode} maps to county: {county}")
-                return county[0] if county else None
-        else:
-            print(f"ERR: postcodes.io returned status {response.status_code} for {outcode}")
-    except Exception as e:
-        print(f"ERR: postcodes.io lookup failed for {outcode}: {str(e)}")
-    
-    return None
+	"""Look up county from UK postcode using the outcode mapping table."""
+	outcode = _extract_outcode(postcode)
+	if not outcode:
+		return None
+	
+	try:
+		mapping = OutcodeCountyMapping.objects.get(outcode=outcode)
+		print(f"DEBUG: Found mapping for outcode {outcode}: {mapping.county}")
+		return mapping.county
+	except OutcodeCountyMapping.DoesNotExist:
+		print(f"ERR: No mapping found for outcode {outcode}")
+		return None
+	except Exception as e:
+		print(f"ERR: Lookup failed for outcode {outcode}: {str(e)}")
+		return None
 
 def _serialize_habitability_score(score, postcode, region):
 	return {
