@@ -443,6 +443,12 @@ def demote_user(request, user_id):
             status=403,
         )
 
+    if current_user.pk == user_id:
+        return JsonResponse(
+            {"error": "FORBIDDEN", "message": "You cannot revoke your own admin privileges."},
+            status=403,
+        )
+
     try:
         target_user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
