@@ -16,12 +16,7 @@ const routes = [
     { path: '/reports', name: 'reports', component: ReportsView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/habitability-score', name: 'habitability-score', component: HabitabilityScoreView },
-    {
-        path: '/authority',
-        name: 'authority',
-        component: AuthorityView,
-        meta: { requiresAdmin: true },
-    },
+    { path: '/authority', name: 'authority', component: AuthorityView, meta: { requiresAdmin: true }},
     { path: '/reports/:reportId', name: 'ReportDetail', component: () => import('../views/ReportDetail.vue')},
     { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
