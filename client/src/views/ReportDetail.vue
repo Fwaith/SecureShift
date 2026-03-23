@@ -19,7 +19,7 @@
                 </div>
 
                 <div class="comments-area">
-                    <h2>Discussion ({{ commentCount }})</h2>
+                    <h2>Discussion ({{ totalCommentCount }})</h2>
 
                     <CommentForm
                         v-if="isAuthenticated"
@@ -28,9 +28,9 @@
                         placeholder="Write your comment..."
                     />
 
-                    <div v-if="report.comments?.length" class="comment-list">
+                    <div v-if="sortedTopLevelComments.length" class="comment-list">
                         <CommentThread
-                            v-for="comment in report.comments"
+                            v-for="comment in displayedComments"
                             :key="comment.commentId"
                             :comment="comment"
                             :report-id="reportId"
@@ -39,7 +39,13 @@
                         />
                     </div>
 
-                    <p v-else class="empty-state">No comments yet. {{ isAuthenticated ? 'Be the first!' : 'Log in to comment.' }}</p>
+                    <p v-else class="empty-state"> No comments yet. {{ isAuthenticated ? 'Be the first!' : 'Log in to comment.' }}</p>
+        
+                    <div v-if="sortedTopLevelComments.length > 2 && !showAllComments" class="view-all-teaser">
+                        <button @click="showAllComments = true" class="view-all-btn">
+                            View all {{ totalCommentCount }} comments
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -62,6 +68,7 @@ const reportId = Number(route.params.reportId)
 const report = ref(null)
 const loading = ref(true)
 const isAuthenticated = ref(false)
+const showAllComments = ref(false)
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/v1`
 
@@ -85,7 +92,35 @@ onMounted(async () => {
     isAuthenticated.value = me.ok
 })
 
-const commentCount = computed(() => report.value?.comments?.length || 0)
+const totalCommentCount = computed(() => {
+    if (!report.value?.comments?.length) return 0
+
+    function countAll(comments) {
+        let total = comments.length
+        for (const c of comments) {
+            if (c.comments?.length) {
+                total += countAll(c.comments)
+            }
+        }
+        return total
+    }
+
+    return countAll(report.value.comments)
+})
+
+const sortedTopLevelComments = computed(() => {
+    if (!report.value?.comments?.length) return []
+    return [...report.value.comments].sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt)
+    })
+})
+
+const displayedComments = computed(() => {
+    if (showAllComments.value) {
+        return sortedTopLevelComments.value
+    }
+    return sortedTopLevelComments.value.slice(0, 2)
+})
 
 function getIconColor(type) {
     const colors = {
@@ -111,4 +146,24 @@ function getIconColor(type) {
 .comments-area { margin-top: 32px; }
 .comment-list { margin-top: 16px; }
 .empty-state { color: #6b7280; text-align: center; padding: 40px 0; }
+
+.view-all-teaser {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.view-all-btn {
+    background: #f1f5f9;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: #3b82f6;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.view-all-btn:hover {
+    background: #e2e8f0;
+}
 </style>

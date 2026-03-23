@@ -52,7 +52,17 @@ const emit = defineEmits(['comment-created'])
 const showReply = ref(false)
 
 function formatDate(ts) {
-    return new Date(ts).toLocaleDateString()
+    const timestamp = typeof ts === 'number' 
+        ? (ts > 1e10 ? ts : ts * 1000)  
+        : ts;
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+  });
 }
 
 function onReplyPosted() {

@@ -239,16 +239,6 @@
                     </div>
                     
                     <div class="comments-preview-section">
-                        <h4>Comments ({{ selectedReport.comments?.length || 0 }})</h4>
-
-                        <div v-if="selectedReport.comments?.length" class="comment-previews">
-                            <div v-for="c in selectedReport.comments.slice(0, 2)" :key="c.commentId" class="preview-item">
-                                <strong>{{ c.username }}</strong>
-                                <p>{{ c.description.substring(0, 80) }}{{ c.description.length > 80 ? '...' : '' }}</p>
-                            </div>
-                        </div>
-                        <p v-else class="no-comments">No comments yet.</p>
-
                         <div class="modal-buttons">
                             <button 
                                 class="btn view-full"
