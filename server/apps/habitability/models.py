@@ -52,6 +52,8 @@ class OutcodeCountyMapping(models.Model):
     """Maps UK postcode outcodes to their corresponding counties."""
     outcode = models.CharField(max_length=4, unique=True, primary_key=True)
     county = models.CharField(max_length=50)
+    lat = models.FloatField(null=True, blank=True)
+    lon = models.FloatField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Outcode County Mappings"

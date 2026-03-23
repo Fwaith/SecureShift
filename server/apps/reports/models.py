@@ -2,8 +2,10 @@ from django.db import models
 
 class Report(models.Model):
     report_id = models.AutoField(primary_key=True)
-    neighbourhood = models.ForeignKey("habitability.Neighborhood", on_delete=models.CASCADE, related_name="reports")
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="reports")
+    postcode = models.CharField(max_length=7)
+    lat = models.FloatField()
+    lon = models.FloatField()
     title = models.TextField()
     description = models.TextField()
     severity = models.CharField(max_length=20)
