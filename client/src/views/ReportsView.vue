@@ -88,7 +88,7 @@
                             </span>
                         </div>
 
-                        <h4>{{ formatArea(report.area) }}</h4>
+                        <h4>{{ report.title || report.type || 'Report' }}</h4>
                         <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
                         
                         <div class="vote-section">

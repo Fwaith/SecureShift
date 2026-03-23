@@ -56,6 +56,7 @@ def serialize_report_overview(report):
         "status": _format_report_status(report.status),
         "votes": report.vote_count,
         "timestamp": int(report.date_submitted.strftime("%s")) if report.date_submitted else None,
+        "title": report.title,
     }
 
 def serialize_comment(comment):
