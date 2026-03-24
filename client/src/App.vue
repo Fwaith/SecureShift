@@ -1,7 +1,13 @@
 <script setup>
+import { watchEffect } from "vue"
 import { useAccessibility } from "./composables/useAccessibility"
 
 const { appStyle, appClasses } = useAccessibility()
+
+watchEffect(() => {
+    document.documentElement.style.fontSize = appStyle.value.fontSize
+    document.documentElement.style.fontFamily = appStyle.value.fontFamily
+})
 </script>
 
 <template>

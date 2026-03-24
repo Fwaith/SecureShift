@@ -12,10 +12,17 @@
             <input
                 type="range"
                 v-model="accessibility.textSize"
-                min="80"
+                min="50"
                 max="150"
             />
             <span>{{ accessibility.textSize }}%</span>
+            </div>
+
+            <div class="setting">
+                <label>Light / Dark Mode</label>
+                <button @click="toggleDarkMode" class="toggle-btn">
+                    {{ accessibility.darkMode ? "Dark" : "Light" }} Mode
+                </button>
             </div>
 
             <div class="setting">
@@ -46,9 +53,10 @@
 </template>
 
 <script setup>
+import { computed } from "vue"
 import { useAccessibility } from "../composables/useAccessibility"
 
-const { accessibility, closeAccessibility } = useAccessibility()
+const { accessibility, closeAccessibility, toggleDarkMode } = useAccessibility()
 </script>
 
 <style scoped>

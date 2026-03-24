@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-      <div class="report-page">   
+      <div class="report-page">
             <div class="map-container">
                 <l-map 
                     ref="mapRef"
@@ -601,16 +601,20 @@ function openReportModal() {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    background: var(--background);
+    padding: 2em 4em;
 }
 
 .map-container {
     height: 60vh;
     min-height: 400px;
     position: relative;
+    margin-bottom: 2em;
 }
 
 .leaflet-map {
+    display: flex;
+    border-radius: 10px;
     width: 100%;
     height: 100%;
 }

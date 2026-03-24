@@ -21,21 +21,25 @@
             </button>
             <span class="divider"></span>
             <button @click="openAccessibility" class="accessibility-button">
-                <img src="/accessibility-logo-light.svg" alt="Accessibility Logo" class="accessibility-logo"/>
+                <img :src="accessibilityLogoPath" alt="Accessibility Logo" class="accessibility-logo"/>
             </button>
         </div>
     </header>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue"
+import { onMounted, ref, watch, computed } from "vue"
 import { useRoute } from "vue-router"
 import { useAccessibility } from "../composables/useAccessibility"
 import api from "../services/api"
 
-const { openAccessibility } = useAccessibility()
+const { openAccessibility, accessibility } = useAccessibility()
 const route = useRoute()
 const showAuthorityLink = ref(false)
+
+const accessibilityLogoPath = computed(() => {
+    return accessibility.darkMode ? "/accessibility-logo-dark.svg" : "/accessibility-logo-light.svg"
+})
 
 async function refreshAuthorityVisibility() {
     try {
@@ -130,8 +134,10 @@ watch(
     padding: 0;
     border: none;
     border-radius: 10px;
-    width: 5rem;
-    height: 2rem;
+    width: auto;
+    min-width: 5rem;
+    height: auto;
+    min-height: 2rem;
 }
 
 .login-button:hover {

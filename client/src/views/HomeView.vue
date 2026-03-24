@@ -3,7 +3,7 @@
         <div class="home-page">
             <section class="hero">
                 <div class="hero-content">
-                    <h1>Know Your Area. <br>Protect you community.</h1>
+                    <h1>Know Your Area. <br>Protect your community.</h1>
                     <p class="subtitle">
                         Real-time habitability scores ~ Community reporting ~ 
                         Built for everyone (WCAG Level A compliant)
