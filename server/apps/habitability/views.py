@@ -44,13 +44,10 @@ def _lookup_county_from_postcode(postcode):
 	
 	try:
 		mapping = OutcodeCountyMapping.objects.get(outcode=outcode)
-		print(f"DEBUG: Found mapping for outcode {outcode}: {mapping.county}")
 		return mapping.county
 	except OutcodeCountyMapping.DoesNotExist:
-		print(f"ERR: No mapping found for outcode {outcode}")
 		return None
 	except Exception as e:
-		print(f"ERR: Lookup failed for outcode {outcode}: {str(e)}")
 		return None
 
 def _serialize_habitability_score(score, postcode, region):
