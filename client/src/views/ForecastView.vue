@@ -32,6 +32,7 @@
                             @focus="focusedField = field.id"
                             @blur="focusedField = null"
                         />
+                        <div v-if="errors[field.id]" class="field-error"> {{ errors[field.id] }}</div>
                         <div class="field-range">{{ field.min }}{{ field.unit }} - {{ field.max }}{{ field.unit }}</div>
                     </div>
                 </div>
@@ -169,6 +170,7 @@ const riskLevels = {
 const formData      = ref({})
 const result       = ref(null)
 const focusedField = ref(null)
+const errors       = ref({})
  
 const isFormComplete = computed(() =>
     fields.every(f => formData.value[f.id] !== undefined && formData.value[f.id] !== "")
@@ -187,6 +189,17 @@ const levelOrder = { safe: 0, amber: 1, danger: 2 }
  
 function analyse() {
     if (!isFormComplete.value) return
+
+    errors.value = {}
+    let hasErrors = false
+    fields.forEach(field => {
+        const value = formData.value[field.id]
+        if (value < field.min || value > field.max) {
+            errors.value[field.id] = `Must be between ${field.min}${field.unit} and ${field.max}${field.unit}`
+            hasErrors = true
+        }
+    })
+    if (hasErrors) return
  
     const fieldResults = fields.map(field => {
         const value = formData.value[field.id]
@@ -209,6 +222,7 @@ const riskConfig = computed(() => result.value ? riskLevels[result.value.level] 
 function reset() {
     formData.value = {}
     result.value   = null
+    errors.value   = {}
 }
 
 </script>
