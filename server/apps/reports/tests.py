@@ -295,7 +295,8 @@ class ReportsApiTests(TestCase):
 	def test_create_report_successfully_persists_report_with_mapped_coordinates(self):
 		"""Create endpoint should persist report using coordinates mapped from postcode outcode."""
 		self._authenticate()
-		OutcodeCountyMapping.objects.create(outcode="B76", county="Warwickshire", lat=52.55, lon=-1.75)
+		# Removed because we now create the mapping in setUp()  
+		# OutcodeCountyMapping.objects.create(outcode="B76", county="Warwickshire", lat=52.55, lon=-1.75)
 
 		response = self.client.post(
 			"/api/v1/reports/create",
