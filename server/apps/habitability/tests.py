@@ -1,4 +1,5 @@
 from datetime import date
+import json
 
 from django.http import JsonResponse
 from django.test import RequestFactory, TestCase
@@ -211,7 +212,7 @@ class HabitabilityApiTests(TestCase):
 		request = self.factory.get("/api/v1/habitability/")
 
 		response = get_habitability_by_postcode(request, "   ")
-		payload = response.json()
+		payload = json.loads(response.content)
 
 		self.assertEqual(response.status_code, 400, msg="Blank postcode should be rejected with HTTP 400.")
 		self.assertEqual(payload["error"], "MISSING_POSTCODE", msg="Expected MISSING_POSTCODE error code.")
