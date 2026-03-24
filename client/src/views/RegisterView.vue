@@ -1,107 +1,110 @@
 <template>
-    <div class="register-container">
-        <div class="register-card">
-            <div class="register-header">
-                <h1>SecureShift</h1>
-                <p v-if="!showOTPForm">Create your account</p>
-                <p v-else>Verify your email</p>
-            </div>
-
-            <form v-if="!showOTPForm" @submit.prevent="handleRegister" class="register-form">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input v-model="form.username" type="text" required />
+    <AppLayout>
+        <div class="register-container">
+            <div class="register-card">
+                <div class="register-header">
+                    <h1>SecureShift</h1>
+                    <p v-if="!showOTPForm">Create your account</p>
+                    <p v-else>Verify your email</p>
                 </div>
 
-                <div class="form-group">
-                    <label>Email</label>
-                    <input v-model="form.email" type="email" required />
-                </div>
+                <form v-if="!showOTPForm" @submit.prevent="handleRegister" class="register-form">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input v-model="form.username" type="text" required />
+                    </div>
 
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <div class="phone-row">
-                        <select v-model="form.phoneCode" required>
-                            <option v-for="code in countryCodes" :key="code" :value="code">{{ code }}</option>
-                        </select>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input v-model="form.email" type="email" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="phone-row">
+                            <select v-model="form.phoneCode" required>
+                                <option v-for="code in countryCodes" :key="code" :value="code">{{ code }}</option>
+                            </select>
+                            <input
+                                v-model.trim="form.phoneNumber"
+                                type="tel"
+                                placeholder="Your phone number"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Postcode</label>
+                        <input v-model="form.postcode" type="text" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
                         <input
-                            v-model.trim="form.phoneNumber"
-                            type="tel"
-                            placeholder="Your phone number"
+                            id="password"
+                            v-model="form.password"
+                            :type="showPassword ? 'text' : 'password'"
+                            placeholder="Minimum 8 characters"
+                            minlength="8"
                             required
                         />
                     </div>
+
+                    <div class="checkbox-group">
+                        <input id="showPassword" v-model="showPassword" type="checkbox" />
+                        <label for="showPassword">Show Password</label>
+                    </div>
+
+                    <button type="submit" :disabled="loading">
+                        {{ loading ? 'Registering...' : 'Register' }}
+                    </button>
+                </form>
+
+                <form v-else @submit.prevent="handleVerifyOTP" class="register-form otp-form">
+                    <div class="otp-message">
+                    <p>
+                        We sent a verification code to
+                        <strong>{{ form.email }}</strong>
+                    </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="otp">OTP</label>
+                        <input
+                            id="otp"
+                            v-model.trim="otp"
+                            type="text"
+                            placeholder="Enter 6-digit OTP"
+                            maxlength="6"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" :disabled="loading">
+                        {{ loading ? 'Verifying...' : 'Verify OTP' }}
+                    </button>
+
+                    <button type="button" class="secondary-button" @click="goBackToRegister" :disabled="loading">
+                        Back
+                    </button>
+                </form>
+
+                <div class="register-footer">
+                    <router-link to="/login">Already have an account? Sign In</router-link>
                 </div>
 
-                <div class="form-group">
-                    <label>Postcode</label>
-                    <input v-model="form.postcode" type="text" required />
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        :type="showPassword ? 'text' : 'password'"
-                        placeholder="Minimum 8 characters"
-                        minlength="8"
-                        required
-                    />
-                </div>
-
-                <div class="checkbox-group">
-                    <input id="showPassword" v-model="showPassword" type="checkbox" />
-                    <label for="showPassword">Show Password</label>
-                </div>
-
-                <button type="submit" :disabled="loading">
-                    {{ loading ? 'Registering...' : 'Register' }}
-                </button>
-            </form>
-
-            <form v-else @submit.prevent="handleVerifyOTP" class="register-form otp-form">
-                <div class="otp-message">
-                <p>
-                    We sent a verification code to
-                    <strong>{{ form.email }}</strong>
-                </p>
-                </div>
-
-                <div class="form-group">
-                    <label for="otp">OTP</label>
-                    <input
-                        id="otp"
-                        v-model.trim="otp"
-                        type="text"
-                        placeholder="Enter 6-digit OTP"
-                        maxlength="6"
-                        required
-                    />
-                </div>
-
-                <button type="submit" :disabled="loading">
-                    {{ loading ? 'Verifying...' : 'Verify OTP' }}
-                </button>
-
-                <button type="button" class="secondary-button" @click="goBackToRegister" :disabled="loading">
-                    Back
-                </button>
-            </form>
-
-            <div class="register-footer">
-                <router-link to="/login">Already have an account? Sign In</router-link>
+                <p v-if="error" class="message error">{{ error }}</p>
+                <p v-if="success" class="message success">{{ success }}</p>
             </div>
-
-            <p v-if="error" class="message error">{{ error }}</p>
-            <p v-if="success" class="message success">{{ success }}</p>
         </div>
-    </div>
+    </AppLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppLayout from "../components/AppLayout.vue"
 
 const router = useRouter()
 

@@ -23,44 +23,24 @@ echo ""
 
 # Run database migrations
 echo "🗄️ Running database migrations..."
+python manage.py makemigrations --noinput
 python manage.py migrate --noinput
 echo "✅ Migrations complete"
 echo ""
 
-# Collect static files
-echo "🖼️ Collecting static files..."
-python manage.py collectstatic --noinput
-echo "✅ Static files collected"
-echo ""
-
 # Create default superuser for development/demo (if it doesn't exist)
-echo "👤 Setting up default superuser..."
-python manage.py shell << 'END'
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-    print('✓ Superuser "admin" created with password "admin123"')
-else:
-    print('✓ Superuser already exists')
-END
+echo "👤 Adding admin account..."
+python manage.py create_admin_account
 echo ""
-
-# Load fixtures (sample data) - but don't fail if they don't exist
-echo "📊 Loading initial data from fixtures..."
 
 # Habitability app fixtures
-echo "  - Loading habitability areas..."
-python manage.py loaddata areas.json 2>/dev/null || echo "  ⚠️ No areas.json fixture found"
+echo "  - Loading habitability scores..."
+python manage.py import_habitability_data ./HabitabilityData.csv
+echo ""
 
-echo "  - Loading report categories..."
-python manage.py loaddata categories.json 2>/dev/null || echo "  ⚠️ No categories.json fixture found"
-
-# Reports app fixtures
-echo "  - Loading sample reports..."
-python manage.py loaddata sample_reports.json 2>/dev/null || echo "  ⚠️ No sample_reports.json fixture found"
-
-echo "✅ Fixture loading complete"
+echo "  - Loading outcode -> county mappings..."
+python manage.py import_outcode_mappings
+echo "✅ Loaded external data"
 echo ""
 
 # Verify everything is working
@@ -72,5 +52,4 @@ echo ""
 echo "========================================="
 echo "✅ SECURESHIFT BACKEND BUILD COMPLETE"
 echo "========================================="
-echo "🌐 Live at: https://secureshift-aqof.onrender.com"
-echo "📅 Build finished: $(date)"
+echo "Run with command 'python manage.py runserver' to start the backend server."

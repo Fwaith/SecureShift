@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-      <div class="report-page">   
+      <div class="report-page">
             <div class="map-container">
                 <l-map 
                     ref="mapRef"
@@ -88,7 +88,7 @@
                             </span>
                         </div>
 
-                        <h4>{{ formatArea(report.area) }}</h4>
+                        <h4>{{ report.title || report.type || 'Report' }}</h4>
                         <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
                         
                         <div class="vote-section">
@@ -124,6 +124,20 @@
                 <div class="modal-content">
                     <h3>Report a New Issue</h3>
                     <form @submit.prevent="createReport">
+                        <div class="form-group">
+                            <label for="postcode">Postcode *</label>
+                            <input
+                                id="postcode"
+                                v-model="newReport.postcode"
+                                type="text"
+                                placeholder="e.g. B76 1AA or B76"
+                                required
+                                maxlength="8"
+                            />
+                            <small v-if="newReport.postcode" class="hint">
+                                Reports are tied to neighbourhoods. This helps us show your report in the right area.
+                            </small>
+                        </div>
                         <div class="form-group">
                             <label>Type of Issue *</label>
                             <div class="type-options">
@@ -266,6 +280,8 @@ const router = useRouter()
 const selectedReport = ref(null)
 const API = `${import.meta.env.VITE_API_URL}/api/v1`
 const NEIGHBOURHOOD_ID = 1
+const userPostcode = ref('')
+const userNeighbourhoodId = ref(NEIGHBOURHOOD_ID)
 
 const zoom = ref(9)
 const center = ref([52.4862, -1.8904])
@@ -283,7 +299,8 @@ const newReport = ref({
     customType: '',
     severity: '',
     title: '',
-    description: ''
+    description: '', 
+    postcode: ''
 })
 
 const areaCoordinates = {
@@ -302,7 +319,8 @@ const formIsValid = computed(() => {
     return (
         hasType &&
         newReport.value.severity &&
-        newReport.value.title.trim()
+        newReport.value.title.trim() &&
+        newReport.value.postcode?.trim().length >= 3
     )
 })
 
@@ -404,7 +422,8 @@ async function createReport() {
         title: newReport.value.title.trim(),
         description: newReport.value.description.trim(),
         severity: newReport.value.severity,
-        type: finalType
+        type: finalType, 
+        postcode: newReport.value.postcode.trim()
     }
 
     console.log('Sending report payload:', payload)
@@ -546,9 +565,34 @@ function getIcon(type) {
     return iconCache[type]
 }
 
+async function loadUserInfo() {
+    try {
+        const res = await fetch(`${API}/users/me`, { credentials: 'include' })
+        if (res.ok) {
+            const user = await res.json()
+            userPostcode.value = user.postcode || ''
+        }
+    } catch (err) {
+        console.warn("Could not load user info", err)
+    }
+}
+
 onMounted(() => {
     fetchReports()
+    loadUserInfo()
 })
+
+function openReportModal() {
+    newReport.value = {
+        type: '',
+        customType: '',
+        severity: '',
+        title: '',
+        description: '',
+        postcode: userPostcode.value || ''  
+    }
+    showReportModal.value = true
+}
 </script>
 
 <style scoped>
@@ -557,16 +601,20 @@ onMounted(() => {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    background: var(--background);
+    padding: 2em 4em;
 }
 
 .map-container {
     height: 60vh;
     min-height: 400px;
     position: relative;
+    margin-bottom: 2em;
 }
 
 .leaflet-map {
+    display: flex;
+    border-radius: 10px;
     width: 100%;
     height: 100%;
 }

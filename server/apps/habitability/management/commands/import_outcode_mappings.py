@@ -39,12 +39,17 @@ class Command(BaseCommand):
             with open(csv_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    outcode = row['outcode'].strip()
+                    outcode = row['postc'].strip()
                     county = row['county'].strip()
+                    latitude = row['latitude'].strip()
+                    longitude = row['longitude'].strip()
+                    
+                    lat = float(latitude) if latitude else None
+                    lon = float(longitude) if longitude else None
                     
                     mapping, created = OutcodeCountyMapping.objects.update_or_create(
                         outcode=outcode,
-                        defaults={'county': county}
+                        defaults={'county': county, 'lat': lat, 'lon': lon}
                     )
                     
                     if created:

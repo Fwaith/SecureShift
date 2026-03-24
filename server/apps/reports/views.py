@@ -4,11 +4,38 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from .models import Report, Votes, Comments
-from habitability.models import Neighborhood
+from habitability.models import Neighborhood, OutcodeCountyMapping
 from accounts.models import User
 
 def _get_session_user(request):
     return User.objects.get(pk=request.session["user_id"])
+
+def _extract_outcode(postcode):
+    if not postcode:
+        return None
+    
+    # Remove spaces and convert to uppercase
+    clean_postcode = postcode.upper().replace(" ", "")
+    
+    # If longer than 4, drop last 3 and trim
+    if len(clean_postcode) > 4:
+        return clean_postcode[:-3].strip()
+    
+    return clean_postcode.strip()
+
+def _lookup_coordinates_from_outcode(outcode):
+    """Look up coordinates (lat, lon) for an outcode from OutcodeCountyMapping.
+    
+    Returns tuple (lat, lon) on success, or (None, None) if not found.
+    """
+    if not outcode:
+        return None, None
+    
+    try:
+        mapping = OutcodeCountyMapping.objects.get(outcode=outcode)
+        return mapping.lat, mapping.lon
+    except OutcodeCountyMapping.DoesNotExist:
+        return None, None
 
 def _format_report_status(status):
     normalized = (status or "").strip().lower().replace("_", " ")
@@ -21,14 +48,15 @@ def _format_report_status(status):
 def serialize_report_overview(report):
     return {
         "id": report.report_id,
-        "lat": report.neighbourhood.lat if report.neighbourhood else None,
-        "lng": report.neighbourhood.lon if report.neighbourhood else None,
+        "lat": report.lat,
+        "lng": report.lon,
         "type": report.type,
-        "area": report.neighbourhood.neighborhood_name if report.neighbourhood else "",
+        "area": report.postcode,
         "severity": report.severity,
         "status": _format_report_status(report.status),
         "votes": report.vote_count,
         "timestamp": int(report.date_submitted.strftime("%s")) if report.date_submitted else None,
+        "title": report.title,
     }
 
 def serialize_comment(comment):
@@ -46,7 +74,9 @@ def serialize_comment(comment):
 def serialize_report(report, include_comments=False):
     data = {
         "reportId": report.report_id,
-        "neighbourhoodId": report.neighbourhood_id,
+        "postcode": report.postcode,
+        "lat": report.lat,
+        "lon": report.lon,
         "username": report.user.username,
         "title": report.title,
         "description": report.description,
@@ -63,6 +93,7 @@ def serialize_report(report, include_comments=False):
 
 
 # GET /api/v1/reports?neighbourhoodId=1
+# Depreciated
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_reports(request):
@@ -78,7 +109,7 @@ def get_reports(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_reports_overview(request):
-    reports = Report.objects.select_related("neighbourhood").order_by("-date_submitted", "-vote_count")
+    reports = Report.objects.order_by("-date_submitted", "-vote_count")
     return JsonResponse([serialize_report_overview(r) for r in reports], safe=False)
 
 
@@ -106,29 +137,47 @@ def create_report(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "INVALID_JSON", "message": "Invalid JSON body"}, status=400)
 
-    neighbourhood_id = body.get("neighbourhoodId")
+    postcode = body.get("postcode")
     title = body.get("title")
     description = body.get("description")
     severity = body.get("severity")
     report_type = body.get("type")
 
-    if not all([neighbourhood_id, title, description, severity, report_type]):
+    if not all([postcode, title, description, severity, report_type]):
         return JsonResponse(
             {
                 "error": "MISSING_FIELDS",
-                "message": "neighbourhoodId, title, description, severity and type are required",
+                "message": "postcode, title, description, severity and type are required",
             },
             status=400,
         )
 
-    try:
-        neighbourhood = Neighborhood.objects.get(pk=neighbourhood_id)
-    except Neighborhood.DoesNotExist:
-        return JsonResponse({"error": "NOT_FOUND", "message": "Neighbourhood not found"}, status=404)
+    # Extract outcode and look up coordinates
+    outcode = _extract_outcode(postcode)
+    if not outcode:
+        return JsonResponse(
+            {
+                "error": "INVALID_POSTCODE",
+                "message": "Could not extract outcode from postcode",
+            },
+            status=400,
+        )
+
+    lat, lon = _lookup_coordinates_from_outcode(outcode)
+    if lat is None or lon is None:
+        return JsonResponse(
+            {
+                "error": "OUTCODE_NOT_FOUND",
+                "message": f"Outcode '{outcode}' not found in mapping database",
+            },
+            status=400,
+        )
 
     Report.objects.create(
-        neighbourhood=neighbourhood,
         user=user,
+        postcode=postcode,
+        lat=lat,
+        lon=lon,
         title=title,
         description=description,
         severity=severity,

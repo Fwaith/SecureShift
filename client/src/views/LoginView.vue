@@ -1,53 +1,48 @@
 <template>
-    <div class="login-container">
-        <div class="login-card">
-
-            <div class="login-header">
-                <h1>SecureShift</h1>
-                <p>Sign in to your account</p>
-            </div>
-
-            <form @submit.prevent="handleLogin" class="login-form">
-
-                <div class="form-group">
-                    <label>Email</label>
-                    <input
-                        v-model="form.email"
-                        type="email"
-                        placeholder="you@example.com"
-                        required
-                    />
+    <AppLayout>
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1>SecureShift</h1>
+                    <p>Sign in to your account</p>
                 </div>
-
-                <div class="form-group">
-                    <label>Password</label>
-                    <input
-                        v-model="form.password"
-                        type="password"
-                        required
-                    />
+                <form @submit.prevent="handleLogin" class="login-form">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input
+                            v-model="form.email"
+                            type="email"
+                            placeholder="you@example.com"
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input
+                            v-model="form.password"
+                            type="password"
+                            required
+                        />
+                    </div>
+                    <button type="submit" :disabled="loading">
+                        {{ loading ? "Signing in..." : "Sign In" }}
+                    </button>
+                </form>
+                <div class="login-footer">
+                    <router-link to="/register">Don't have an account? Register</router-link>
                 </div>
-
-                <button type="submit" :disabled="loading">
-                    {{ loading ? "Signing in..." : "Sign In" }}
-                </button>
-
-            </form>
-
-            <div class="login-footer">
-                <router-link to="/register">Don't have an account? Register</router-link>
+                <p v-if="error" class="error">{{ error }}</p>
+                <p v-if="success" class="success">{{ success }}</p>
             </div>
-
-            <p v-if="error" class="error">{{ error }}</p>
-            <p v-if="success" class="success">{{ success }}</p>
-
         </div>
-    </div>
+    </AppLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppLayout from "../components/AppLayout.vue"
+import { authStore } from "../services/authStore"
 
 const router = useRouter()
 
@@ -71,37 +66,29 @@ const handleLogin = async () => {
     try {
         const res = await fetch(`${API}/auth/login`, {
             method: 'POST',
-            headers: {
-             'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form.value),
-            credentials: 'include'
+            credentials: 'include' 
         })
         
         const data = await res.json().catch(() => ({}))
 
         if (!res.ok) {
             throw new Error(data.message || 'Invalid email or password')
-            }
+        }
 
-        const userRes = await fetch(`${API}/users/me`, {
-            method: 'GET',
-            credentials: 'include'
-        })
-
-        const userData = await userRes.json().catch(() => ({}))
-
-        if (!userRes.ok) {
-            throw new Error(userData.message || 'Could not load user details')
-            }
-
+        authStore.isInitialized = false;
         success.value = 'Login successful! Redirecting...'
-        setTimeout(() => router.push('/home'), 800)
-  } catch (err) {
-    error.value = err.message || 'Login failed. Please try again.'
-  } finally {
-    loading.value = false
-  }
+
+        setTimeout(() => {
+            router.push('/home')
+        }, 800)
+
+    } catch (err) {
+        error.value = err.message || 'Login failed. Please try again.'
+    } finally {
+        loading.value = false
+    }
 }
 </script>
 

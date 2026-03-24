@@ -3,13 +3,13 @@
         <div class="home-page">
             <section class="hero">
                 <div class="hero-content">
-                    <h1>Know Your Area. <br>Protect you community.</h1>
+                    <h1>Know Your Area. <br>Protect your community.</h1>
                     <p class="subtitle">
                         Real-time habitability scores ~ Community reporting ~ 
                         Built for everyone (WCAG Level A compliant)
                     </p>
                     <div class="cta-buttons">
-                        <button type="button" class="btn-primary">
+                        <button @click="goToHabitabilityView" class="btn-primary">
                             Check Habitability Score
                         </button>
                         <button @click="goToReports" class="btn-secondary">
@@ -31,7 +31,7 @@
             <section class="features">
                 <h2>Core Features</h2>
                 <div class="features-grid">
-                    <div class="feature-card">
+                    <div class="feature-card" @click="goToHabitabilityView">
                         <h3>Habitability Overview</h3>
                         <p>Interactive map with choropleth layers, comparison tool, and detailed metrics using the official formula.</p>
                     </div>
@@ -114,6 +114,7 @@ function getIconColor(type) {
     return colors[type] || '#4f46e5'
 }
 const goToReports = () => router.push('/reports')
+const goToHabitabilityView = () => router.push('/habitability-score')
 </script>
 
 <style scoped>
