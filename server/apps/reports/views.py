@@ -97,7 +97,6 @@ def serialize_report(report, include_comments=False):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_reports(request):
-    raise NotImplementedError("This endpoint is defunct.")
     neighbourhood_id = request.GET.get("neighbourhoodId")
     if not neighbourhood_id:
         return JsonResponse({"error": "MISSING_PARAM", "message": "neighbourhoodId is required"}, status=400)
