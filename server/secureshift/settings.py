@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'accounts',
     'reports',
     'habitability',
-    'forecast',
 ]
 
 MIDDLEWARE = [
@@ -141,7 +140,6 @@ INSTALLED_APPS = [
     "accounts",
     "habitability",
     "reports",
-    "forecast",
 
     "django_extensions",            # to generate database diagram of models
     "corsheaders",
