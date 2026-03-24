@@ -15,9 +15,10 @@
             <div class="features">
                 <span class="category">Features</span>
                 <nav>
-                    <router-link to="/reports" class="nav-link">Reports</router-link>
+                    <router-link to="/habitability" class="nav-link">Habitability</router-link>
                     <router-link to="/forecast" class="nav-link">Forecast</router-link>
-                    <router-link to="/authority" class="nav-link">Authority</router-link>
+                    <router-link to="/reports" class="nav-link">Reports</router-link>
+                    <router-link v-if="showAuthorityLink" to="/authority" class="nav-link">Authority</router-link>
                 </nav>
             </div>
             <div class="account">
@@ -35,6 +36,35 @@
 </template>
 
 <script setup>
+import { onMounted, ref, watch } from "vue"
+import { useRoute } from "vue-router"
+import { useAccessibility } from "../composables/useAccessibility"
+import api from "../services/api"
+
+const { openAccessibility } = useAccessibility()
+const route = useRoute()
+const showAuthorityLink = ref(false)
+
+async function refreshAuthorityVisibility() {
+    try {
+        const response = await api.get("/users/me")
+        showAuthorityLink.value = response?.data?.is_admin === true
+    } catch {
+        showAuthorityLink.value = false
+    }
+}
+
+onMounted(() => {
+    refreshAuthorityVisibility()
+})
+
+watch(
+    () => route.fullPath,
+    () => {
+        refreshAuthorityVisibility()
+    }
+)
+
 function scrolltoTop(){
     window.scrollTo({
         top: 0,
@@ -110,7 +140,7 @@ button {
     flex-direction: column;
     padding: 1rem;
     padding-top: 0;
-    align-items: center;
+    align-items: flex-start;
     font-size: 1rem;
 }
 
