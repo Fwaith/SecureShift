@@ -12,11 +12,14 @@
             <router-link to="/habitability-score" class="nav-link">Habitability</router-link>
             <router-link to="/forecast" class="nav-link">Forecast</router-link>
             <router-link to="/reports" class="nav-link">Reports</router-link>
-            <router-link v-if="showAuthorityLink" to="/authority" class="nav-link">Authority</router-link>
+            <router-link v-if="authStore.isAdmin" to="/authority" class="nav-link">Authority</router-link>
         </nav>
 
         <div class="button-group">
-            <button @click="$router.push('/login')" class="login-button">
+            <button v-if="isLoggedIn" @click="authStore.logout()" class="logout-button">
+                Logout
+            </button>
+            <button v-else @click="$router.push('/login')" class="login-button">
                 Login
             </button>
             <span class="divider"></span>
@@ -28,36 +31,29 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch, computed } from "vue"
+import { onMounted, watch, computed } from "vue"
 import { useRoute } from "vue-router"
 import { useAccessibility } from "../composables/useAccessibility"
-import api from "../services/api"
+import { authStore } from "../services/authStore"
 
 const { openAccessibility, accessibility } = useAccessibility()
 const route = useRoute()
-const showAuthorityLink = ref(false)
+
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+const showAuthorityLink = computed(() => authStore.isAdmin)
 
 const accessibilityLogoPath = computed(() => {
     return accessibility.darkMode ? "/accessibility-logo-dark.svg" : "/accessibility-logo-light.svg"
 })
 
-async function refreshAuthorityVisibility() {
-    try {
-        const response = await api.get("/users/me")
-        showAuthorityLink.value = response?.data?.is_admin === true
-    } catch {
-        showAuthorityLink.value = false
-    }
-}
-
 onMounted(() => {
-    refreshAuthorityVisibility()
+    authStore.checkAuth()
 })
 
 watch(
     () => route.fullPath,
     () => {
-        refreshAuthorityVisibility()
+        authStore.checkAuth()
     }
 )
 </script>
@@ -119,6 +115,10 @@ watch(
     filter: brightness(2.5);
 }
 
+.dark .nav-link:hover {
+    filter: brightness(0.4);
+}
+
 .button-group {
     display: flex;
     flex: 1;
@@ -127,7 +127,7 @@ watch(
     align-items: center;
 }
 
-.login-button {
+.login-button, .logout-button{
     cursor: pointer;
     background: var(--primary);
     color: var(--on-primary);
@@ -140,8 +140,14 @@ watch(
     min-height: 2rem;
 }
 
-.login-button:hover {
-    filter: brightness(0.85);
+.login-button:hover, .logout-button:hover {
+    filter: brightness(0.75);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(var(--shadow), var(--shadow-alpha));
+}
+
+.dark .login-button:hover, .dark .logout-button:hover {
+    filter: brightness(1.25);
     transform: translateY(-2px);
     box-shadow: 0 2px 4px rgba(var(--shadow), var(--shadow-alpha));
 }
@@ -161,6 +167,12 @@ watch(
     margin: 0;
     cursor: pointer;
 }
+
+.dark .accessibility-button:hover {
+    filter: brightness(1.25);
+    transform: translateY(-2px);
+}
+
 
 .accessibility-logo {
     width: 2.5rem;

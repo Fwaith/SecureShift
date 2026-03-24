@@ -24,8 +24,13 @@
             <div class="account">
                 <span class="category">Account</span>
                 <nav>
-                    <router-link to="/login" class="nav-link">Login</router-link>
-                    <router-link to="/register" class="nav-link">Register</router-link>
+                    <template v-if="!isLoggedIn">
+                        <router-link to="/login" class="nav-link">Login</router-link>
+                        <router-link to="/register" class="nav-link">Register</router-link>
+                    </template>
+                    <template v-else>
+                        <a href="#" @click.prevent="authStore.logout()" class="nav-link">Logout</a>
+                    </template>
                 </nav>
             </div>
         </div>
@@ -36,41 +41,26 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue"
+import { onMounted, watch, computed } from "vue"
 import { useRoute } from "vue-router"
-import { useAccessibility } from "../composables/useAccessibility"
-import api from "../services/api"
+import { authStore } from "../services/authStore"
 
-const { openAccessibility } = useAccessibility()
 const route = useRoute()
-const showAuthorityLink = ref(false)
 
-async function refreshAuthorityVisibility() {
-    try {
-        const response = await api.get("/users/me")
-        showAuthorityLink.value = response?.data?.is_admin === true
-    } catch {
-        showAuthorityLink.value = false
-    }
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+const showAuthorityLink = computed(() => authStore.isAdmin)
+
+const scrolltoTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 onMounted(() => {
-    refreshAuthorityVisibility()
+    authStore.checkAuth()
 })
 
-watch(
-    () => route.fullPath,
-    () => {
-        refreshAuthorityVisibility()
-    }
-)
-
-function scrolltoTop(){
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-}
+watch(() => route.fullPath, () => {
+    authStore.checkAuth()
+})
 </script>
 
 <style scoped>
@@ -151,7 +141,11 @@ nav {
 
 .nav-link {
     color: var(--background);
-    filter: brightness(0.85);
+    filter: brightness(0.75);
+}
+
+.dark .nav-link:hover {
+    filter: brightness(1.9);
 }
 
 .category {
