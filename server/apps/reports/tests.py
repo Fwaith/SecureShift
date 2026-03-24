@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.test import TestCase
 
-from habitability.models import OutcodeCountyMapping
+from habitability.models import OutcodeCountyMapping, Region
 from reports.models import Comments, Report, Votes
 
 
@@ -14,6 +14,16 @@ class ReportsModelTests(TestCase):
 	"""Model tests for Report, Votes, and Comments database constraints/relationships."""
 
 	def setUp(self):
+		self.warwickshire, _ = Region.objects.get_or_create(
+			region_name="Warwickshire",
+			defaults={'region_name': "Warwickshire"}
+		)
+
+		self.mapping, _ = OutcodeCountyMapping.objects.get_or_create(
+			outcode="B76",
+			defaults={"county": "Warwickshire", "lat": 52.55, "lon": -1.75}
+		)
+
 		self.user = self._create_user("model-owner")
 		self.other_user = self._create_user("model-peer")
 
@@ -22,7 +32,7 @@ class ReportsModelTests(TestCase):
 			username=username,
 			password="StrongPass123!",
 			email=f"{username}@example.com",
-			postcode="",
+			postcode="B761AA",
 		)
 
 	def _create_report(self, user=None, **overrides):
@@ -90,15 +100,25 @@ class ReportsApiTests(TestCase):
 	"""Endpoint coverage for active reports APIs, including auth and error handling."""
 
 	def setUp(self):
+		self.warwickshire, _ = Region.objects.get_or_create(
+			region_name="Warwickshire",
+			defaults={'region_name': "Warwickshire"}
+		)
+
+		self.mapping, _ = OutcodeCountyMapping.objects.get_or_create(
+			outcode="B76",
+			defaults={"county": "Warwickshire", "lat": 52.55, "lon": -1.75}
+		)
+  
 		self.user = self._create_user("api-owner")
 		self.other_user = self._create_user("api-peer")
-
+    
 	def _create_user(self, username):
 		return get_user_model().objects.create_user(
 			username=username,
 			password="StrongPass123!",
 			email=f"{username}@example.com",
-			postcode="",
+			postcode="B761AA",
 		)
 
 	def _authenticate(self):
