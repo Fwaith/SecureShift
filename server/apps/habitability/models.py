@@ -87,11 +87,10 @@ class Neighborhood(models.Model):
                 if county:
                     try:
                         self.region = Region.objects.get(region_name=county)
-                        print(f"DEBUG: Assigned region '{county}' to postcode {self.postcode}")
                     except Region.DoesNotExist:
-                        print(f"ERR: Region '{county}' not found in database for postcode {self.postcode}")
+                        pass
                 else:
-                    print(f"ERR: Could not determine county for postcode {self.postcode}")
+                    pass
 
         if self.postcode and (self.lat is None or self.lon is None):
             latitude, longitude = _lookup_coordinates_from_postcode(self.postcode)
