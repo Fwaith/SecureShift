@@ -5,17 +5,19 @@
         @click.self="closeAccessibility"
     >
         <div class="modal-content">
-            <h3>Accessibility Settings</h3>
+            <h1>Accessibility Settings</h1>
 
             <div class="setting">
-            <label>Text Size</label>
-            <input
-                type="range"
-                v-model="accessibility.textSize"
-                min="50"
-                max="150"
-            />
-            <span>{{ accessibility.textSize }}%</span>
+                <div class="text-size">
+                    <label>Text Size</label>
+                    <span>{{ accessibility.textSize }}%</span>
+                </div>
+                <input
+                    type="range"
+                    v-model="accessibility.textSize"
+                    min="50"
+                    max="150"
+                />
             </div>
 
             <div class="setting">
@@ -68,49 +70,82 @@ const { accessibility, closeAccessibility, toggleDarkMode } = useAccessibility()
     align-items: center;
     justify-content: center;
     z-index: 99999;
+    width: 100vw;
+    height: 100vh;
 }
 
 .modal-content {
-    background: white;
+    background: var(--background);
     padding: 32px;
-    border-radius: 16px;
-    max-width: 420px;
-    width: 90%;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    min-width: 30%;
+    width: fit;
+    height: fit;
+    box-shadow: 0 1rem 2rem rgba(var(--shadow), var(--shadow-alpha));
 }
 
 .setting {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .setting label {
-    display: block;
+    display: flex;
+    font-size: 1rem;
+    color: var(--on-background);
     margin-bottom: 8px;
-    font-weight: 600;
+}
+
+.text-size {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--on-background);
+    font-size: 16px;
+}
+
+h1 {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+    color: var(--on-background);
+}
+
+.span {
+    font-size: 18px;
 }
 
 .toggle-btn,
 select,
 input[type="range"] {
     width: 100%;
+    background: var(--surface);
+    font-size: 0.8rem;
+}
+
+input[type="range"] {
+    accent-color: var(--primary);
+    background: transparent;
 }
 
 .toggle-btn,
 select {
-    padding: 10px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    background: white;
+    padding: 12.8px;
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    background: var(--background);
+    color: var(--on-background);
     cursor: pointer;
 }
 
 .close-btn {
     width: 100%;
     padding: 14px;
-    background: #1e40af;
-    color: white;
+    background: var(--container);
+    color: var(--on-container);
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-size: 16px;
     margin-top: 16px;
     font-weight: 600;
     cursor: pointer;
