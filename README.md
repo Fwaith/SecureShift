@@ -1,33 +1,112 @@
 # SecureShift
 
-## Instructions
-- Clone the git repo
-- In Render go to Blueprints → new blueprint instance
-- connect to repo
-- render.yaml acts as the blueprint
+SecureShift is a full-stack project with:
+- Django backend in `server/`
+- Vue (Vite) frontend in `client/`
 
-## To-do
-[Issue board](https://git.cs.bham.ac.uk/software-engineering-2025-26/AlgorithmAlliance/-/boards)
+## Technical Requirements
 
-## Note
+- Python 3.12+
+- Node.js (current LTS recommended)
+- npm (installed with Node.js)
+- `venv` support for Python virtual environments
 
-**build.sh:**
-- Installs dependencies
-- Runs migrations
-- Collects static files
-- Loads fixtures
+Notes:
+- The backend uses SQLite locally (`server/db.sqlite3`), so no separate local DB server is required.
+- The setup scripts expect `python`, `node`, and `npm` to be available in your `PATH`.
 
-Database tables and relationships can be made using Models which are located inside models.py in each app folder
+## Quick Start (Local)
 
-Data can be hardcoded using fixtures in the fixtures dir in each app (not made yet)
+Run these commands from the repo root:
 
-**Render doesn't show the tables so maybe use:**
-- Render Shell: python manage.py dbshell
-- PSQL client
+1. Build both environments (backend + frontend):
+	 python scripts/build_env.py
 
-**When changing models:**
-1. python manage.py makemigrations
-2. python manage.py migrate
-3. run `python manage.py import_habitability_data ./HabitabilityData.csv` from inside the `server` dir
-3. run `python manage.py create_admin_account` from inside the `server` dir
-3. run `python manage.py import_outcode_mappings` from inside the `server` dir
+2. Start both backend and frontend dev sessions:
+	 python scripts/run_dev.py
+
+The app should be available at:
+- Frontend: http://127.0.0.1:5173
+- Backend: http://127.0.0.1:8000
+
+## Notes
+
+- A default admin account is created during setup/reset:
+	- Email: `admin@secureshift.com`
+	- Password: `test1234`
+- Additional accounts can be registered normally, but they start without admin permissions.
+- If backend install fails on `psycopg2-binary`, switch to `psycopg2` in `server/requirements.txt` and rerun `python scripts/build_env.py`.
+- If you change models, rerun `python scripts/reset_database.py` for a clean local state.
+
+## Running Django Tests
+
+Run these commands from the repo root.
+
+### Option A: Use the helper script (recommended)
+
+Command:
+python scripts/run_backend_tests.py
+
+What it does:
+- Uses `server/venv` Python if available, otherwise falls back to your current Python
+- Runs Django tests for these apps only:
+	- `accounts`
+	- `reports`
+	- `habitability`
+
+### Option B: Run the same tests directly with `manage.py`
+
+`python server/manage.py test accounts reports habitability`
+
+If you are using the project virtual environment directly, you can also run:
+
+`server/venv/bin/python server/manage.py test accounts reports habitability`
+
+## Scripts
+
+### 1) Build environments
+Command:
+python scripts/build_env.py
+
+What it does:
+- Validates required tooling (Python, Node, npm)
+- Creates `server/venv` if needed
+- Installs backend dependencies from `server/requirements.txt`
+- Installs frontend dependencies from `client/package-lock.json` / `client/package.json`
+- Runs backend migrations and data setup commands:
+	- `python manage.py makemigrations`
+	- `python manage.py migrate`
+	- `python manage.py import_habitability_data ./HabitabilityData.csv`
+	- `python manage.py create_admin_account`
+	- `python manage.py import_outcode_mappings`
+
+### 2) Reset database
+Command:
+python scripts/reset_database.py
+
+What it does:
+- Deletes `server/db.sqlite3`
+- Rebuilds DB state by running:
+	- `python manage.py makemigrations`
+	- `python manage.py migrate`
+	- `python manage.py import_habitability_data ./HabitabilityData.csv`
+	- `python manage.py create_admin_account`
+	- `python manage.py import_outcode_mappings`
+
+### 3) Run frontend + backend
+Command:
+python scripts/run_dev.py
+
+What it does:
+- Starts Django in `server/`
+- Starts Vite in `client/`
+- Streams both logs to one terminal
+- Stops both processes on Ctrl+C
+
+### 4) Run backend tests (accounts/reports/habitability)
+Command:
+python scripts/run_backend_tests.py
+
+What it does:
+- Executes `manage.py test` for `accounts`, `reports`, and `habitability`
+- Uses `server/venv` automatically when present
