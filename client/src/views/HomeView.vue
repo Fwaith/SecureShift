@@ -98,7 +98,7 @@ async function loadRecentReports() {
 }
 
 onMounted(() => {
-    loadRecentReports()
+    // loadRecentReports()
 })
 
 function getIconColor(type) {
