@@ -42,7 +42,7 @@
                 </div>
             </section>
 
-            <section class="add-section">
+            <!-- <section class="add-section">
                 <h2>Grant Authority Access</h2>
                 <div class="form-row">
                     <div class="form-field">
@@ -64,7 +64,7 @@
                 <button class="btn-grant" @click="grantAccess" :disabled="!canGrant">
                     Grant Access
                 </button>
-            </section>
+            </section> -->
 
             <transition name="modal-fade">
                 <div v-if="editing" class="modal-overlay" @click.self="editing = null">
