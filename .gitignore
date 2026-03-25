@@ -5,7 +5,6 @@
 server/venv/
 .venv/
 .vscode/
-server/.env
 
 # Copied from /client/.gitignore by Charlie
 # Logs
