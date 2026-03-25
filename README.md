@@ -20,6 +20,10 @@ The app should be available at:
 
 ## Notes
 
+- A default admin account is created during setup/reset:
+	- Email: `admin@secureshift.com`
+	- Password: `test1234`
+- Additional accounts can be registered normally, but they start without admin permissions.
 - If backend install fails on `psycopg2-binary`, switch to `psycopg2` in `server/requirements.txt` and rerun `python scripts/build_env.py`.
 - If you change models, rerun `python scripts/reset_database.py` for a clean local state.
 
