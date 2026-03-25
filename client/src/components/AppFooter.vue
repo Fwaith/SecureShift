@@ -111,6 +111,7 @@ watch(() => route.fullPath, () => {
 }
 
 button {
+    display: flex;
     width: fit-content;
     height: 2rem;
     border: 1px solid var(--on-primary);

@@ -9,15 +9,15 @@ import AuthorityView from '../views/AuthorityView.vue'
 import HabitabilityScoreView from '../views/HabitabilityScoreView.vue'
 
 const routes = [
-    { path: '/', redirect: '/login' },
+    { path: '/', redirect: '/home' },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/home', name: 'home', component: HomeView },
     { path: '/reports', name: 'reports', component: ReportsView },
     { path: '/forecast', name: 'forecast', component: ForecastView },
     { path: '/habitability-score', name: 'habitability-score', component: HabitabilityScoreView },
-    { path: '/authority', name: 'authority', component: AuthorityView, meta: { requiresAdmin: true }},
-    { path: '/reports/:reportId', name: 'ReportDetail', component: () => import('../views/ReportDetail.vue')},
+    { path: '/authority', name: 'authority', component: AuthorityView, meta: { requiresAdmin: true } },
+    { path: '/reports/:reportId', name: 'ReportDetail', component: () => import('../views/ReportDetail.vue') },
     { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 

@@ -3,8 +3,7 @@
         <div class="login-container">
             <div class="login-card">
                 <div class="login-header">
-                    <h1>SecureShift</h1>
-                    <p>Sign in to your account</p>
+                    <h1>Sign in to your account</h1>
                 </div>
                 <form @submit.prevent="handleLogin" class="login-form">
                     <div class="form-group">
@@ -95,42 +94,42 @@ const handleLogin = async () => {
 <style scoped>
 
 .login-container {
-    height: 100vh;
-    width: 100vw;
+    height: auto;
+    width: auto;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
-    background: linear-gradient(135deg,#f3f4f6,#e0e7ff);
+    background: var(--surface);
 }
 
 .login-card {
-    width: 420px;
-    padding: 40px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    width: 25rem;
+    height: auto;
+    padding: 3rem;
+    margin: 3rem;
+    background: var(--background);
+    border-radius: 10px;
+    box-shadow: 0 1rem 2rem rgba(var(--shadow), var(--shadow-alpha));
 }
 
 .login-header {
-    text-align: center;
-    margin-bottom: 30px;
+    text-align: left;
 }
 
 .login-header h1 {
-    font-size: 40px;
-    color: #4f46e5;
-}
-
-.login-header p {
-    color: #6b7280;
+    padding: 0;
+    margin: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: var(--on-background);
 }
 
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 1rem;
 }
 
 .form-group {
@@ -139,41 +138,79 @@ const handleLogin = async () => {
 }
 
 input {
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
+    background: var(--background);
+    padding: 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--outline);
+    color: var(--on-background);
+}
+
+input::placeholder {
+    color: var(--outline);
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
 }
 
 button {
-    margin-top: 10px;
-    padding: 14px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
     border: none;
     border-radius: 10px;
-    background: #4f46e5;
-    color: white;
+    background: var(--container);
+    color: var(--on-container);
     font-weight: 600;
     cursor: pointer;
 }
 
 button:hover {
-    background: #4338ca;
+    filter: brightness(0.85);
+}
+
+.dark button:hover {
+    filter: brightness(1.25);
 }
 
 .login-footer {
     text-align: center;
-    margin-top: 20px;
+}
+
+a {
+    color: var(--on-container);
+}
+
+a:hover {
+    filter: brightness(2.5);
+}
+
+.dark a:hover {
+    filter: brightness(0.4);
+}
+
+label {
+    color: var(--on-background);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .error {
-    color: red;
+    color: var(--error);
     text-align: center;
-    margin-top: 10px;
+    margin: 0;
+    margin-top: 1rem;
+    font-weight: 600;
 }
 
 .success {
-    color: green;
+    color: var(--success);
     text-align: center;
-    margin-top: 10px;
+    margin: 0;
+    margin-top: 1rem;
+    font-weight: 600;
 }
 
 </style>

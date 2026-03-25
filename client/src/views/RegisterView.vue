@@ -1,11 +1,10 @@
 <template>
     <AppLayout>
         <div class="register-container">
-            <div class="register-card">
+            <div class="register-card" :class="{ 'otp': showOTPForm }">
                 <div class="register-header">
-                    <h1>SecureShift</h1>
-                    <p v-if="!showOTPForm">Create your account</p>
-                    <p v-else>Verify your email</p>
+                    <h1 v-if="!showOTPForm">Create your account</h1>
+                    <h1 v-else>Verify your email</h1>
                 </div>
 
                 <form v-if="!showOTPForm" @submit.prevent="handleRegister" class="register-form">
@@ -63,10 +62,10 @@
 
                 <form v-else @submit.prevent="handleVerifyOTP" class="register-form otp-form">
                     <div class="otp-message">
-                    <p>
-                        We sent a verification code to
-                        <strong>{{ form.email }}</strong>
-                    </p>
+                        <p class="otp-text">
+                            We sent a verification code to
+                            <strong>{{ form.email }}</strong>
+                        </p>
                     </div>
 
                     <div class="form-group">
@@ -214,62 +213,44 @@ const goBackToRegister = () => {
 
 <style scoped>
 .register-container {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  background: linear-gradient(135deg, #f3f4f6, #e0e7ff);
+    width: auto;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--surface);
 }
 
 .register-card {
-  width: 100%;
-  max-width: 980px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 36px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    margin: 3rem;
+    width: 50rem;
+    height: auto;
+    background: var(--background);
+    border-radius: 10px;
+    box-shadow: 0 1rem 2rem rgba(var(--shadow), var(--shadow-alpha));
+}
+
+.register-card.otp{
+    width: 25rem;
 }
 
 .register-header {
-    text-align: center;
-    margin-bottom: 28px;
+    text-align: left;
 }
 
 .register-header h1 {
     margin: 0;
-    font-size: 2.75rem;
-    color: #4f46e5;
-    line-height: 1.1;
-}
-
-.register-header p {
-    margin-top: 10px;
-    color: #6b7280;
-    font-size: 1rem;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: var(--on-background);
 }
 
 .register-form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-}
-
-.section-title {
-    margin-top: 8px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #4f46e5;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.form-row {
-    display: flex;
-    gap: 16px;
+    gap: 1rem;
 }
 
 .form-group {
@@ -279,46 +260,45 @@ const goBackToRegister = () => {
 }
 
 .form-group label {
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #334155;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: var(--on-background);
 }
 
 .phone-row {
     display: flex;
-    gap: 10px;
+    gap: 1rem;
 }
 
 .phone-row select {
-    width: 110px;
+    flex: 1;
 }
 
 .phone-row input {
-    flex: 1;
+    flex: 9;
 }
 
 input,
 select {
     width: 100%;
-    padding: 12px 14px;
-    border: 1px solid #d1d5db;
+    padding: 0.8rem;
+    border: 1px solid var(--outline);
     border-radius: 10px;
-    font-size: 0.98rem;
-    box-sizing: border-box;
-    background: #ffffff;
+    background: var(--background);
+    color: var(--on-background);
 }
 
 input:focus,
 select:focus {
     outline: none;
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
 }
 
 .checkbox-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 1rem;
 }
 
 .checkbox-group input {
@@ -326,16 +306,17 @@ select:focus {
 }
 
 .checkbox-group label {
-    color: #475569;
+    color: var(--on-background);
 }
 
 button {
-    margin-top: 4px;
-    padding: 14px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
     border: none;
     border-radius: 12px;
-    background: #4f46e5;
-    color: #ffffff;
+    background: var(--container);
+    color: var(--on-container);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -343,7 +324,11 @@ button {
 }
 
 button:hover {
-    background: #4338ca;
+    filter: brightness(0.85);
+}
+
+.dark button:hover {
+    filter: brightness(1.25);
 }
 
 button:disabled {
@@ -352,51 +337,67 @@ button:disabled {
 }
 
 .secondary-button {
-    background: #e5e7eb;
-    color: #1f2937;
+    margin-top: 0;
+    background: var(--surface);
+    color: var(--on-surface);
 }
 
 .secondary-button:hover {
-    background: #d1d5db;
+    filter: brightness(0.85);
+}
+
+.dark .secondary-button:hover {
+    filter: brightness(1.25);
 }
 
 .otp-form {
-    max-width: 420px;
     margin: 0 auto;
+    gap: 1rem;
 }
 
 .otp-message {
-    text-align: center;
-    color: #475569;
+    text-align: left;
+    color: var(--on-background);
+}
+
+.otp-text {
+    margin: 0;
 }
 
 .register-footer {
     text-align: center;
-    margin-top: 20px;
 }
 
 .register-footer a {
-    color: #4f46e5;
-    text-decoration: none;
-    font-weight: 500;
+    color: var(--on-container);
 }
 
 .register-footer a:hover {
-    text-decoration: underline;
+    filter: brightness(2.5);
+}
+
+.dark .register-footer a:hover {
+    filter: brightness(0.4);
 }
 
 .message {
     text-align: center;
-    margin-top: 14px;
-    font-weight: 500;
+    margin-top: 1rem;
+    font-weight: 600;
 }
 
 .error {
-    color: #dc2626;
+    color: var(--error);
+    text-align: center;
+    margin: 0;
+    margin-top: 1rem;
 }
 
 .success {
-    color: #16a34a;
+    color: var(--success);
+    text-align: center;
+    margin: 0;
+    margin-top: 1rem;
 }
 
 @media (max-width: 768px) {
