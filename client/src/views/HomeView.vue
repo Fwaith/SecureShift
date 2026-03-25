@@ -33,7 +33,7 @@
                 <div class="features-grid">
                     <div class="feature-card" @click="goToHabitabilityView">
                         <h3>Habitability Overview</h3>
-                        <p>Interactive map with choropleth layers, comparison tool, and detailed metrics using the official formula.</p>
+                        <p>Interactive visual comparison tool for habitability metrics, across any two areas of the country.</p>
                     </div>
 
                     <div class="feature-card" @click="goToReports">
