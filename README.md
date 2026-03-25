@@ -4,6 +4,17 @@ SecureShift is a full-stack project with:
 - Django backend in `server/`
 - Vue (Vite) frontend in `client/`
 
+## Technical Requirements
+
+- Python 3.12+
+- Node.js (current LTS recommended)
+- npm (installed with Node.js)
+- `venv` support for Python virtual environments
+
+Notes:
+- The backend uses SQLite locally (`server/db.sqlite3`), so no separate local DB server is required.
+- The setup scripts expect `python`, `node`, and `npm` to be available in your `PATH`.
+
 ## Quick Start (Local)
 
 Run these commands from the repo root:
@@ -26,6 +37,30 @@ The app should be available at:
 - Additional accounts can be registered normally, but they start without admin permissions.
 - If backend install fails on `psycopg2-binary`, switch to `psycopg2` in `server/requirements.txt` and rerun `python scripts/build_env.py`.
 - If you change models, rerun `python scripts/reset_database.py` for a clean local state.
+
+## Running Django Tests
+
+Run these commands from the repo root.
+
+### Option A: Use the helper script (recommended)
+
+Command:
+python scripts/run_backend_tests.py
+
+What it does:
+- Uses `server/venv` Python if available, otherwise falls back to your current Python
+- Runs Django tests for these apps only:
+	- `accounts`
+	- `reports`
+	- `habitability`
+
+### Option B: Run the same tests directly with `manage.py`
+
+`python server/manage.py test accounts reports habitability`
+
+If you are using the project virtual environment directly, you can also run:
+
+`server/venv/bin/python server/manage.py test accounts reports habitability`
 
 ## Scripts
 
@@ -67,3 +102,11 @@ What it does:
 - Starts Vite in `client/`
 - Streams both logs to one terminal
 - Stops both processes on Ctrl+C
+
+### 4) Run backend tests (accounts/reports/habitability)
+Command:
+python scripts/run_backend_tests.py
+
+What it does:
+- Executes `manage.py test` for `accounts`, `reports`, and `habitability`
+- Uses `server/venv` automatically when present
