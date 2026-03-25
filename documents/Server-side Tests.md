@@ -1,5 +1,45 @@
 # Backend Test Case Catalog
 
+## How to run the tests
+
+Run all server-side tests from the project root:
+
+```bash
+python scripts/build_env.py
+python server/venv/bin/python server/manage.py test
+```
+
+If you are already inside the `server` directory:
+
+```bash
+./venv/bin/python manage.py test
+```
+
+Run tests for a single app:
+
+```bash
+./venv/bin/python manage.py test accounts
+./venv/bin/python manage.py test reports
+./venv/bin/python manage.py test habitability
+```
+
+## Test Classification
+
+These are Django `TestCase`-based automated tests. They are primarily:
+
+- Unit tests for model behavior and constraints.
+- API/endpoint tests that call backend routes and validate responses.
+- Validation and error-path tests to confirm bad inputs are safely rejected.
+- Authentication/authorization tests to confirm permission rules are enforced.
+
+The test runner uses an isolated test database, so running tests does not modify the local database.
+
+## What these tests verify
+
+- Accounts flow: register, OTP verification, login/logout, profile retrieval, and user update rules.
+- Reports flow: report creation and retrieval, ordering logic, upvotes, and nested comments.
+- Habitability flow: postcode parsing, neighborhood mapping behavior, score calculations, and API fallback/404 behavior.
+
 ## Reports App
 
 ### ReportsModelTests
