@@ -230,6 +230,11 @@ function reset() {
 </script>
 
 <style scoped> 
+.authority-page {
+    min-height: 80vh;
+    background: var(--background);
+    padding: 2rem;
+}
 
 .page-container {
     padding: 40px;
@@ -238,27 +243,35 @@ function reset() {
 }
 
 .page-header {
-    margin-bottom: 30px;
     text-align: center;
 }
 
 .page-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    margin-bottom: 0.5rem;
+    color: var(--on-background);
+}
+
+.subtitle {
+    margin: 0;
+    margin-bottom: 1rem;
+    color: var(--on-container);
 }
 
 .fields-grid {
+    width: 60rem;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    margin-bottom: 28px;
-    padding: 0 20px;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    margin: 0 auto;
 }
  
 .field-card {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
+    background: var(--surface);
+    border: 1.5px solid var(--outline);
     border-radius: 14px;
     padding: 20px;
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
@@ -274,41 +287,52 @@ function reset() {
 label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
+    gap: 0.5rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--on-background);
     margin-bottom: 10px;
 }
 
- 
+input {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    background: var(--background);
+    color: var(--on-background);
+}
+
 input[type="number"] {
     width: 100%;
     padding: 10px 12px;
-    border: 1.5px solid #e2e8f0;
+    border: 1.5px solid var(--background);
     border-radius: 10px;
-   
 }
+
 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 input[type="number"]:focus {
     outline: none;
     border-color: #0f172a;
 }
 
- 
+.field-range {
+    color: var(--on-background);
+    font-size: 1rem;
+}
 
 .actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 1rem;
+    justify-content: center;
+    margin-top : 1rem;
 }
- 
+
 .btn-analyse {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: #0f172a;
-    color: #fff;
+    gap: 1rem;
+    background: var(--container);
+    color: var(--on-container);
     border: none;
     border-radius: 10px;
     padding: 13px 26px;
@@ -317,26 +341,37 @@ input[type="number"]:focus {
     transition: background 0.2s, transform 0.15s, opacity 0.2s;
 }
 
-.btn-analyse:hover:not(:disabled) { background: #1e293b; transform: translateY(-1px); }
+.btn-analyse:hover:not(:disabled) {
+    filter: brightness(0.85);
+    transform: translateY(-1px);
+}
+
+.dark .btn-analyse:hover:not(:disabled) {
+    filter: brightness(1.25);
+    transform: translateY(-1px);
+}
+
 .btn-analyse:disabled { opacity: 0.2; cursor: not-allowed; }
  
 .btn-reset {
     background: transparent;
-    border: 1.0px solid #e2e8f0;
+    border: 1.0px solid var(--outline);
     border-radius: 10px;
-    padding: 12px 20px;
-    color: #64748b;
+    padding: 0.5rem 1rem;
+    color: var(--on-background);
     cursor: pointer;
     transition: border-color 0.2s, color 0.2s;
+
 }
-.btn-reset:hover { border-color: #94a3b8; color: #374151; }
  
 .result-slide-enter-active { transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .result-slide-enter-from   { opacity: 0; transform: translateY(20px); }
- 
+
 .result-panel {
-    margin-top: 36px;
-    border-radius: 16px;
+    width: 60rem;
+    margin: 0 auto;
+    margin-top: 2rem;
+    border-radius: 10px;
     padding: 28px;
     border: 2px solid transparent;
 }

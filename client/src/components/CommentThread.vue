@@ -72,30 +72,43 @@ function onReplyPosted() {
 </script>
 
 <style scope>
-.comment-thread { margin-bottom: 20px; }
+.comment-thread {
+    margin-bottom: 1rem;
+}
 
 .comment-box {
-    background: #f8fafc;
-    padding: 14px 16px;
-    border-radius: 8px;
-    border-left: 4px solid #3b82f6;
+    background: var(--background);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--outline);
+    border-left: 4px solid var(--primary);
 }
 
 .comment-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 6px;
-    color: #1e293b;
+    margin-bottom: 0.5rem;
+    color: var(--on-background);
+    font-size: 1rem;
 }
 
-.date { font-size: 0.82rem; color: #6b7280; }
-.comment-text { margin: 0 0 10px; line-height: 1.5; }
+.date {
+    font-size: 0.80rem;
+    color: var(--outline);
+}
+
+.comment-text {
+    margin: 0 0 10px;
+    line-height: 1.5;
+    font-size: 0.8rem;
+    color: var(--on-background);
+}
 
 .reply-link {
     background: none;
     border: none;
-    color: #3b82f6;
-    font-size: 0.9rem;
+    color: var(--primary);
+    font-size: 0.8rem;
     cursor: pointer;
 }
 
@@ -103,7 +116,6 @@ function onReplyPosted() {
     margin-left: 32px;
     margin-top: 12px;
     padding-left: 16px;
-    border-left: 2px solid #e5e7eb;
+    border-left: 2px solid ;
 }
 </style>
- 

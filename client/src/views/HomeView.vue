@@ -120,91 +120,104 @@ const goToHabitabilityView = () => router.push('/habitability-score')
 <style scoped>
 .home-page {
     min-height: 100vh;
-    background: #f8fafc;
-    font-family: system-ui, sans-serif;
+    background: var(--background);
 }
 
 .hero {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 80px 40px;
-    background: linear-gradient(135deg, #1e40af, #3b82f6);
-    color: white;
-    gap: 40px;
+    padding: 3rem;
+    background: var(--container);
+    color: var(--on-container);
 }
 
 .hero-content h1 {
-    font-size: 3.2rem;
+    font-size: 3rem;
     line-height: 1.1;
     margin: 0;
+    margin-bottom: 1rem;
 }
 
 .subtitle {
     font-size: 1.25rem;
     max-width: 520px;
-    opacity: 0.95;
+    margin: 0;
+    margin-bottom: 1rem;
 }
 
 .cta-buttons {
     display: flex;
-    gap: 16px;
-    margin-top: 30px;
+    gap: 1rem;
+    margin: 0;
 }
 
 .btn-primary, .btn-secondary {
-    padding: 16px 32px;
+    padding: 1rem 2rem;
     border-radius: 9999px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     border: none;
 }
 
 .btn-primary {
-    background: white;
-    color: #1e40af;
+    background: var(--background);
+    color: var(--on-background);
 }
 
 .btn-secondary {
     background: transparent;
-    color: white;
-    border: 2px solid white;
+    color: var(--on-container);
+    border: 2px solid var(--background);
 }
 
 .score-card {
-    background: white;
-    color: #1e293b;
-    padding: 30px;
-    border-radius: 16px;
+    background: var(--background);
+    color: var(--on-background);
+    border-radius: 10px;
+    padding: 2rem;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    min-width: 260px;
+    box-shadow: 0 1rem 2rem rgba(var(--shadow), var(--shadow-alpha));
+}
+
+h3 {
+    color: var(--on-background);
+    font-size: 1.25rem;
+    margin: 0;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    margin: 0 auto;
+    margin-bottom: 2rem;
 }
 
 .score-circle {
     width: 140px;
     height: 140px;
-    background: #f1f5f9;
+    background: var(--on-background);
     border-radius: 9999px;
-    margin: 20px auto;
+    margin: 0 auto;
+    margin-bottom: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    font-size: 2.8rem;
-    font-weight: 700;
-    color: #1e40af;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--background);
 }
 
 .score-detail {
+    margin: 0 auto;
     font-size: 1rem;
-    color: #64748b;
+    color: var(--on-background);
 }
 
 .features {
-    padding: 60px 40px;
-    background: white;
+    padding: 3rem;
+    background: var(--background);
 }
 
 .features h2 {
@@ -220,9 +233,9 @@ const goToHabitabilityView = () => router.push('/habitability-score')
 }
 
 .feature-card {
-    background: #f8fafc;
-    padding: 32px;
-    border-radius: 16px;
+    background: var(--background);
+    padding: 2rem;
+    border-radius: 10px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
@@ -239,8 +252,8 @@ const goToHabitabilityView = () => router.push('/habitability-score')
 }
 
 .recent-reports {
-    padding: 60px 40px;
-    background: #f8fafc;
+    padding: 3rem;
+    background: var(--surface);
 }
 
 .reports-teaser {

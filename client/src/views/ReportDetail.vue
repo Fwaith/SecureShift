@@ -1,56 +1,57 @@
 <template>
     <AppLayout>
         <div class="detail-container">
-            <button class="back-button" @click="$router.back()">← Back to reports</button>
+            <div class="detail-card">
+                <button class="back-button" @click="$router.back()">← Back to reports</button>
 
-            <div v-if="report" class="report-detail">
-                <h1>{{ report.title || report.type }}</h1>
+                <div v-if="report" class="report-detail">
+                    <h1>{{ report.title || report.type }}</h1>
 
-                <div class="meta">
-                    <span class="badge" :style="{ backgroundColor: getIconColor(report.type) }">{{ report.type }}</span>
-                    <span class="badge" :class="report.severity?.toLowerCase()">Severity: {{ report.severity }}</span>
-                    <span class="badge" :class="report.status?.toLowerCase()">Status: {{ report.status }}</span>
-                    <span>Votes: {{ report.voteCount || 0 }}</span>
-                </div>
+                    <div class="meta">
+                        <span class="badge" :style="{ backgroundColor: getIconColor(report.type) }">{{ report.type }}</span>
+                        <span class="badge" :class="report.severity?.toLowerCase()">Severity: {{ report.severity }}</span>
+                        <span class="badge" :class="report.status?.toLowerCase()">Status: {{ report.status }}</span>
+                        <span class="votes">Votes: {{ report.voteCount || 0 }}</span>
+                    </div>
 
-                <div class="description">
-                    <h3>Description</h3>
-                    <p>{{ report.description || 'No description provided.' }}</p>
-                </div>
+                    <div class="description">
+                        <h3>Description</h3>
+                        <p>{{ report.description || 'No description provided.' }}</p>
+                    </div>
 
-                <div class="comments-area">
-                    <h2>Discussion ({{ totalCommentCount }})</h2>
+                    <div class="comments-area">
+                        <h2>Discussion ({{ totalCommentCount }})</h2>
 
-                    <CommentForm
-                        v-if="isAuthenticated"
-                        :report-id="reportId"
-                        @comment-created="loadReport"
-                        placeholder="Write your comment..."
-                    />
-
-                    <div v-if="sortedTopLevelComments.length" class="comment-list">
-                        <CommentThread
-                            v-for="comment in displayedComments"
-                            :key="comment.commentId"
-                            :comment="comment"
+                        <CommentForm
+                            v-if="isAuthenticated"
                             :report-id="reportId"
-                            :is-authenticated="isAuthenticated"
                             @comment-created="loadReport"
+                            placeholder="Write your comment..."
                         />
-                    </div>
 
-                    <p v-else class="empty-state"> No comments yet. {{ isAuthenticated ? 'Be the first!' : 'Log in to comment.' }}</p>
-        
-                    <div v-if="sortedTopLevelComments.length > 2 && !showAllComments" class="view-all-teaser">
-                        <button @click="showAllComments = true" class="view-all-btn">
-                            View all {{ totalCommentCount }} comments
-                        </button>
+                        <div v-if="sortedTopLevelComments.length" class="comment-list">
+                            <CommentThread
+                                v-for="comment in displayedComments"
+                                :key="comment.commentId"
+                                :comment="comment"
+                                :report-id="reportId"
+                                :is-authenticated="isAuthenticated"
+                                @comment-created="loadReport"
+                            />
+                        </div>
+
+                        <p v-else class="empty-state"> No comments yet. {{ isAuthenticated ? 'Be the first!' : 'Log in to comment.' }}</p>
+            
+                        <div v-if="sortedTopLevelComments.length > 2 && !showAllComments" class="view-all-teaser">
+                            <button @click="showAllComments = true" class="view-all-btn">
+                                View all {{ totalCommentCount }} comments
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <div v-else-if="loading" class="loading">Loading report...</div>
+                <div v-else class="not-found">Report not found.</div>
             </div>
-
-            <div v-else-if="loading" class="loading">Loading report...</div>
-            <div v-else class="not-found">Report not found.</div>
         </div>
     </AppLayout>
 </template>
@@ -137,15 +138,158 @@ function getIconColor(type) {
 </script>
 
 <style scoped>
-.detail-container { max-width: 900px; margin: 32px auto; padding: 0 16px; }
-.back-button { background: none; border: none; color: #3b82f6; font-weight: 600; margin-bottom: 16px; cursor: pointer; }
-.report-detail { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-.meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; color: #64748b; }
-.badge { padding: 6px 12px; border-radius: 999px; font-size: 0.9rem; font-weight: 500; }
+.detail-container {
+    height: auto;
+    width: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--surface);
+}
+
+.detail-card {
+    width: 50rem;
+    height: auto;
+    margin: 2rem;
+    margin-bottom: 3rem;
+}
+
+h1 {
+    color: var(--on-background);
+    font-size: 1.5rem;
+    margin: 0;
+    margin-bottom: 1rem;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: var(--on-surface);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.back-button:hover {
+    color: var(--primary);
+}
+
+.report-detail {
+    background: var(--background);
+    border-radius: 10px;
+    padding: 2rem ;
+    padding-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+}
+
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 0;
+    margin-bottom: 1rem;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--background);
+}
+
+.type-badge {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    color: var(--background);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge.pending {
+    background: var(--pending); color: var(--on-pending);
+}
+
+.badge.in-progress {
+    background: var(--in-progress); color: var(--on-in-progress);
+}
+
+.badge.resolved {
+    background: var(--resolved); color: var(--on-resolved);
+}
+
+.badge.low {
+    background: var(--low);
+    color: var(--on-low);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge.medium { 
+    background: var(--medium);
+    color: var(--on-medium);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge.high {
+    background: var(--high);
+    color: var(--on-high);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.votes {
+    color: var(--on-background);
+    font-size: 1rem;
+}
+
+h3 {
+    color: var(--on-background);
+    font-size: 1rem;
+    margin: 0;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    margin: 0;
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--on-surface);
+    padding: 1rem;
+    border-radius: 10px
+}
+
+h2 {
+    margin: 0;
+    color: var(--on-background);
+}
+
 .description { margin: 24px 0; line-height: 1.6; }
-.comments-area { margin-top: 32px; }
-.comment-list { margin-top: 16px; }
-.empty-state { color: #6b7280; text-align: center; padding: 40px 0; }
+
+.comment-list {
+    margin-top: 1rem;
+}
+
+.empty-state {
+    color: var(--on-surface);
+    text-align: center;
+    padding: 1rem;
+}
 
 .view-all-teaser {
     margin-top: 24px;
@@ -153,17 +297,21 @@ function getIconColor(type) {
 }
 
 .view-all-btn {
-    background: #f1f5f9;
+    background: var(--container);
     border: none;
     padding: 10px 20px;
-    border-radius: 8px;
-    color: #3b82f6;
+    border-radius: 10px;
+    color: var(--on-container);
     font-weight: 600;
     cursor: pointer;
     font-size: 1rem;
 }
 
 .view-all-btn:hover {
-    background: #e2e8f0;
+    filter: brightness(0.85);
+}
+
+.dark .view-all-btn:hover {
+    filter: brightness(1.25);
 }
 </style>

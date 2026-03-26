@@ -260,35 +260,45 @@ async function comparePostcodes() {
 
 <style scoped>
 .comparison-page {
-    min-height: 100vh;
-    background: #f8fafc;
-    padding: 36px 26px 60px;
+    min-height: 80vh;
+    background: var(--background);
+    padding: 2rem;
 }
 
 .page-header {
     text-align: center;
-    margin-bottom: 26px;
+    margin-bottom: 1rem;
 }
 
 .page-header h1 {
+    font-weight: 600;
     margin: 0;
-    color: #1e293b;
-    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--on-background);
+    font-size: 1.5rem;
 }
 
 .subtitle {
-    margin-top: 10px;
-    color: #475569;
+    margin: 0;
+    margin-bottom: 1rem;
+    color: var(--on-container);
 }
 
 .comparison-controls {
-    max-width: 1100px;
-    margin: 0 auto 24px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    padding: 20px;
+    max-width: 60rem;
+    margin: 0 auto 1rem;
+    background: var(--background);
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    box-shadow: 0 0.5rem 0.5rem rgba(var(--shadow), var(--shadow-alpha));
+    padding: 1rem;
+}
+
+label {
+    font-size: 1rem;
+    color: var(--on-background);
+    margin: 0;
+    margin-bottom: 0.5rem;
 }
 
 .controls-grid {
@@ -298,6 +308,11 @@ async function comparePostcodes() {
     align-items: center;
 }
 
+input {
+    background: var(--background);
+    color: var(--on-background);
+}
+
 .input-column {
     display: flex;
     flex-direction: column;
@@ -305,7 +320,6 @@ async function comparePostcodes() {
 }
 
 .input-column label {
-    color: #334155;
     font-weight: 600;
 }
 
@@ -329,32 +343,32 @@ async function comparePostcodes() {
 
 .compare-btn {
     border: none;
-    background: #1e40af;
-    color: white;
-    padding: 12px 24px;
+    background: var(--container);
+    color: var(--on-container);
+    padding: 0.5rem 1rem;
     border-radius: 9999px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
 }
 
 .compare-btn:disabled {
     cursor: not-allowed;
-    opacity: 0.65;
+    opacity: 0.30;
 }
 
 .error-text {
     margin: 0;
-    color: #b91c1c;
-    font-size: 0.9rem;
+    color: var(-error);
+    font-size: 0.8rem;
 }
 
 .comparison-results {
-    max-width: 1100px;
+    max-width: 60rem;
     margin: 0 auto;
-    background: white;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    padding: 22px;
+    background: var(--background);
+    border-radius: 10px;
+    border: 1px solid var(--outline);
+    padding: 1rem;
 }
 
 .results-header {
@@ -363,21 +377,22 @@ async function comparePostcodes() {
     gap: 12px;
     margin-bottom: 20px;
     align-items: center;
+    font-size: 1rem;
 }
 
 .postcode-pill {
     text-align: center;
     border-radius: 9999px;
-    padding: 10px 14px;
-    background: #eff6ff;
-    color: #1d4ed8;
-    font-weight: 700;
+    padding: 0.5rem;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 600;
 }
 
 .metric-heading {
     text-align: center;
-    color: #334155;
-    font-weight: 700;
+    color: var(--on-background);
+    font-weight: 600;
 }
 
 .metric-group {
@@ -387,39 +402,40 @@ async function comparePostcodes() {
 }
 
 .metric-group h3 {
-    margin: 0 0 10px;
-    color: #0f172a;
+    margin: 0 0 0.5rem;
+    color: var(--on-background);
     font-size: 1rem;
 }
 
 .metric-row {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
+    gap: 1rem;
     align-items: center;
-    padding: 8px 0;
+    padding: 0.5rem 0;
+    font-size: 1rem;
 }
 
 .value-cell {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--background);
+    border: 1px solid var(--outline);
     border-radius: 10px;
-    min-height: 42px;
     display: flex;
+    padding: 0.5rem;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--on-background);
 }
 
 .indicator-cell {
-    min-height: 42px;
+    padding: 0.5rem;
     border-radius: 10px;
     border: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 1rem;
     color: #475569;
     background: #ffffff;
 }
@@ -430,20 +446,20 @@ async function comparePostcodes() {
 }
 
 .winner-left {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1e40af;
+    background: var(--container);
+    border-color: var(--outline);
+    color: var(--on-container);
 }
 
 .winner-right {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1e40af;
+    background: var(--container);
+    border-color: var(--outline);
+    color: var(--on-container);
 }
 
 .winner-equal {
-    background: #f1f5f9;
-    color: #334155;
+    background: var(--background);
+    color: var(--on-background);
 }
 
 .empty-state {

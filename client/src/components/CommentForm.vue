@@ -61,27 +61,35 @@ async function submitComment() {
 
 <style scoped>
 .comment-form {
-    margin-bottom: 24px;
+    margin-bottom: 1rem;
 }
+
 textarea {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #d1d5db;
+    padding: 10px;
+    border: 1px solid var(--outline);
     border-radius: 8px;
     resize: vertical;
+    background: var(--background);
+    margin: 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    color: var(--on-background);
 }
 button {
-    margin-top: 8px;
-    background: #3b82f6;
-    color: white;
+    background: var(--container);
+    color: var(--on-container);
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
+    padding: 0.8rem;
+    margin: 0;
 }
+
 button:disabled {
-    opacity: 0.6;
+    color: var(--on-surface);
+    background: var(--surface);
     cursor: not-allowed;
 }
 </style>
