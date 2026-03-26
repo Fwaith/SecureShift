@@ -37,6 +37,7 @@ The app should be available at:
 - Additional accounts can be registered normally, but they start without admin permissions.
 - If backend install fails on `psycopg2-binary`, switch to `psycopg2` in `server/requirements.txt` and rerun `python scripts/build_env.py`.
 - If you change models, rerun `python scripts/reset_database.py` for a clean local state.
+- **Browser Support:** Safari is not supported. The frontend has only been tested on Chrome.
 
 ## Running Django Tests
 
