@@ -186,39 +186,49 @@ function saveEdit() {
 </script>
 
 <style scoped>
-
-
 .authority-page {
-    padding: 0px;
-    max-width: 1200px;
+    min-height: 80vh;
+    padding: 2rem;
+    padding-left: 4rem;
+    padding-right: 4rem;
+    background: var(--background);
     margin: 0 auto;
 }
 
 .page-header {
-    margin-bottom: 30px;
     text-align: center;
+    margin-bottom: 1rem;
 }
 
 .page-header h1 {
-    font-size: 2rem;
-    font-weight: 700; 
-    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: 600 
 }
 
- 
+h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--on-background);
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--on-background);
+    font-size: 1rem;
+    margin: 0;
+}
 
 .authority-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
 }
  
 .authority-card {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 22px;
+    background: var(--background);
+    border: 1px solid var(--on-background);
+    border-radius: 10px;
+    padding: 1rem;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 .authority-card:hover {
@@ -230,7 +240,7 @@ function saveEdit() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 1rem;
 }
  
 .authority-icon { font-size: 1.8rem; }
@@ -252,8 +262,9 @@ function saveEdit() {
 .authority-card h3 {
     font-size: 1rem;
     font-weight: 700;
-    margin: 0 0 4px;
-    color: #0f172a;
+    margin: 0;
+    margin-bottom: 0.5rem;
+    color: var(--on-background);
 }
  
 .authority-role {
@@ -265,17 +276,17 @@ function saveEdit() {
 .permissions {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 16px;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
 }
  
 .permission-tag {
     font-size: 0.75rem;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--surface);
+    color: var(--on-surface);
     padding: 3px 8px;
     border-radius: 6px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--outline);
 }
  
 .card-actions {

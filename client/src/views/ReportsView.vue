@@ -1,6 +1,6 @@
 <template>
-  <AppLayout>
-      <div class="report-page">
+    <AppLayout>
+        <div class="report-page">
             <div class="map-container">
                 <l-map 
                     ref="mapRef"
@@ -9,10 +9,9 @@
                     class="leaflet-map"
                 >
                     <l-tile-layer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution="&copy; OpenStreetMap contributors"
+                        :url="isDarkMode ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'"
+                        :attribution="isDarkMode ? '&copy; CartoDB' : '&copy; OpenStreetMap contributors'"
                     />
-
                     <l-marker
                         v-for="report in filteredReportsWithLocation"
                         :key="report.id"
@@ -56,10 +55,7 @@
                             <option value="recent">Most Recent</option>
                         </select>
 
-                        <button
-                            class="report-issue-btn"
-                            @click="showReportModal = true"
-                        >
+                        <button class="report-issue-btn" @click="showReportModal = true">
                             Report an Issue
                         </button>
                     </div>
@@ -90,26 +86,35 @@
 
                         <h4>{{ report.title || report.type || 'Report' }}</h4>
                         <p class="severity">Severity: <strong>{{ report.severity }}</strong></p>
-                        
-                        <div class="vote-section">
-                            <button 
-                                class="vote-btn upvote-btn"
-                                @click.stop="upvote(report)"
-                            >
-                                Upvote
-                            </button>
-                            <button 
-                                class="vote-btn downvote-btn"
-                                @click.stop="removeUpvote(report)"
-                            >
-                                Downvote
-                            </button>
-                            <span class="vote-count">{{ report.voteCount || report.votes || 0 }} votes</span>
-                        </div>
+                        <span class="separator"></span>
+                        <div class="card-bottom">
+                            <div class="vote-section">
+                                <button 
+                                    type="button"
+                                    class="vote-btn"
+                                    @mouseenter="isUpHovered = report.id"
+                                    @mouseleave="isUpHovered = null"
+                                    @click.stop="upvote(report)"
+                                >
+                                    <img :src="getUpvoteSrc(report)" alt="Upvote" class="upvote-img" />
+                                </button>
 
-                        <small class="timestamp">
-                            {{ new Date(report.timestamp).toLocaleDateString() }}
-                        </small>
+                                <span class="vote-count">{{ report.voteCount || report.votes || 0 }}</span>
+
+                                <button 
+                                    type="button"
+                                    class="vote-btn"
+                                    @mouseenter="isDownHovered = report.id"
+                                    @mouseleave="isDownHovered = null"
+                                    @click.stop="removeUpvote(report)"
+                                >
+                                    <img :src="getDownvoteSrc(report)" alt="Downvote" class="downvote-img" />
+                                </button>
+                            </div>
+                            <small class="timestamp">
+                                {{ new Date(report.timestamp).toLocaleDateString() }}
+                            </small>
+                        </div>
                     </div>
                 </div>
 
@@ -118,7 +123,6 @@
                     <p>Click to view full archive →</p>
                 </div>
             </div>
-
 
             <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
                 <div class="modal-content">
@@ -249,7 +253,9 @@
 
                     <div class="description-block">
                         <h4>Description</h4>
-                        <p>{{ selectedReport.description || 'No further details provided.' }}</p>
+                    </div>
+                    <div class="details">
+                        <p class="details-text">{{ selectedReport.description || 'No further details provided.' }}</p>
                     </div>
                     
                     <div class="comments-preview-section">
@@ -270,7 +276,7 @@
 
 <script setup>
 import AppLayout from "../components/AppLayout.vue"
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, reactive, watch } from "vue"
 import * as L from 'leaflet'
 import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet"
 import "leaflet/dist/leaflet.css"
@@ -482,7 +488,7 @@ const areaCenters = {
 
 function generateReports() {
     reports.value = []
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 100; i++) {
         const area = areas[Math.floor(Math.random() * areas.length)]
         const [centerLat, centerLng] = areaCenters[area] || [52.4862, -1.8904]
         reports.value.push({
@@ -538,17 +544,19 @@ const resolvedReports = computed(() =>
 )
 
 const iconCache = {}
-function getIconColor(type) { 
-    switch(type) {
-        case 'Flood': return '#2563eb'
-        case 'Wildfire': return '#dc2626'
-        case 'Storm Damage': return '#7c3aed'
-        case 'Road blocked': return '#ea580c'
-        case 'Power Outage': return '#ca8a04'
-        case 'Landslide': return '#92400e'
-        case 'Infrastructure Damage': return '#0f766e'
-        default: return '#4f46e5'
-    }
+function getIconColor(type) {
+    const isDark = isDarkMode.value;
+    const colors = {
+        'Flood':                 isDark ? '#44adff' : '#2563eb',
+        'Wildfire':              isDark ? '#ff5252' : '#dc2626',
+        'Storm Damage':          isDark ? '#b388ff' : '#7c3aed',
+        'Road blocked':          isDark ? '#ff9100' : '#ea580c',
+        'Power Outage':          isDark ? '#ffff00' : '#ca8a04',
+        'Landslide':             isDark ? '#a1887f' : '#92400e',
+        'Infrastructure Damage': isDark ? '#26a69a' : '#0f766e',
+        'Default':               isDark ? '#94a3b8' : '#4f46e5'
+    };
+    return colors[type] || colors['Default'];
 }
 
 function getIcon(type) {
@@ -593,12 +601,43 @@ function openReportModal() {
     }
     showReportModal.value = true
 }
+
+const isUpHovered = ref(null)
+const isDownHovered = ref(null)
+const isDarkMode = ref(document.documentElement.classList.contains('dark'))
+
+onMounted(() => {
+    const observer = new MutationObserver(() => {
+        isDarkMode.value = document.documentElement.classList.contains('dark')
+    })
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+    })
+})
+
+const getUpvoteSrc = (report) => {
+    const isThisOneHovered = isUpHovered.value === report.id
+    if (isDarkMode.value) {
+        return isThisOneHovered ? '/upvote-dark.svg' : '/dark-upvote.svg'
+    }
+    return isThisOneHovered ? '/upvote-light.svg' : '/light-upvote.svg'
+}
+
+const getDownvoteSrc = (report) => {
+    const isThisOneHovered = isDownHovered.value === report.id
+    if (isDarkMode.value) {
+        return isThisOneHovered ? '/downvote-dark.svg' : '/dark-downvote.svg'
+    }
+    return isThisOneHovered ? '/downvote-light.svg' : '/light-downvote.svg'
+}
 </script>
 
 <style scoped>
 .report-page {
-    width: 100%;
-    height: 100vh;
+    width: auto;
+    height: auto;
+    min-height: 80vh;
     display: flex;
     flex-direction: column;
     background: var(--background);
@@ -606,46 +645,43 @@ function openReportModal() {
 }
 
 .map-container {
-    height: 60vh;
-    min-height: 400px;
-    position: relative;
+    width: auto;
+    height: 25rem;
     margin-bottom: 2em;
 }
 
 .leaflet-map {
-    display: flex;
     border-radius: 10px;
     width: 100%;
     height: 100%;
 }
 
 .reports-section {
-    flex: 1;
-    padding: 20px;
+    max-height: 50rem;
+    padding: 0;
     overflow-y: auto;
-    background: white;
-    border-top: 1px solid #e2e8f0;
+    background: var(--background);
+    border-top: 1px solid var(--on-background);
 }
 
 .reports-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin: 1rem 1rem 1rem 0;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 1rem;
 }
 
 .reports-header h2 {
     margin: 0;
-    color: #1e293b;
+    color: var(--on-background);
 }
 
 .no-reports {
     text-align: center;
-    padding: 60px 20px;
-    color: #64748b;
-    font-size: 1.1rem;
+    color: var(--on-background);
+    font-size: 1.rem;
 }
 
 .close-modal {
@@ -658,27 +694,86 @@ function openReportModal() {
     color: #aaa;
     cursor: pointer;
 }
+
 .meta-row {
     display: flex;
-    gap: 10px;
-    margin: 12px 0;
+    gap: 1rem;
+    margin: 0;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
 }
-.badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: white;
+
+p {
+    margin: 0;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: var(--on-background);
 }
 
-.severity.low    { background: #84cc16; }
-.severity.medium { background: #f59e0b; }
-.severity.high   { background: #ef4444; }
-.status.pending     { background: #fbbf24; color: #78350f; }
-.status.in-progress { background: #60a5fa; }
-.status.resolved    { background: #34d399; }
-.description-block { margin: 20px 0; padding: 16px; background: #f9fafb; border-radius: 8px; }
+.details-text {
+    margin: 0;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--background);
+}
+
+.severity.low {
+    background: var(--low);
+    color: var(--on-low);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.severity.medium { 
+    background: var(--medium);
+    color: var(--on-medium);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.severity.high {
+    background: var(--high);
+    color: var(--on-high);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status.pending {
+    background: var(--pending); color: var(--on-pending);
+}
+
+.status.in-progress {
+    background: var(--in-progress); color: var(--on-in-progress);
+}
+
+.status.resolved {
+    background: var(--resolved); color: var(--on-resolved);
+}
+
+.description-block {
+    margin: 0;
+    padding: 0;
+    background: var(--background); 
+    border-radius: 10px;
+}
+
+.details {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
 .comments-preview-section { margin-top: 24px; border-top: 1px solid #eee; padding-top: 20px; }
 .comment-previews { margin: 12px 0; }
 .preview-item { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
@@ -686,86 +781,118 @@ function openReportModal() {
 .modal-buttons { margin-top: 16px; text-align: center; }
 
 .btn.view-full {
-    background: #3b82f6;
-    color: white;
+    background: var(--container);
+    color: var(--on-container);
     border: none;
-    padding: 10px 24px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
+    margin: 0;
+    padding: 0.8rem;
 }
 
 .controls {
     display: flex;
-    gap: 12px;
+    gap: 1rem;
+    padding: 1px;
     flex-wrap: wrap;
 }
 
 .search-input,
 .filter-select {
     padding: 10px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 0.95rem;
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    color: var(--on-surface);
+    background: var(--surface);
+    font-size: 0.8rem;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
 }
 
 .report-issue-btn {
-    background: #10b981;
-    color: white;
+    background: var(--container);
+    color: var(--on-container);
     border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 0.5rem 1rem;
+
+    border-radius: 10px;
+    font-weight: 500;
     cursor: pointer;
     transition: background 0.2s;
     white-space: nowrap;
 }
 
 .report-issue-btn:hover {
-    background: #059669;
+    filter: brightness(0.75);
+    box-shadow: 0 20px 4px rgba(var(--shadow) var(--shadow-alpha));
+}
+
+.dark .report-issue-btn:hover {
+    filter: brightness(1.25);
+    box-shadow: 0 20px 4px rgba(var(--shadow) var(--shadow-alpha));
 }
 
 .reports-grid {
     display: grid;
+    padding: 0 1rem 0 0;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
+    gap: 1rem;
 }
 
 .report-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 18px;
+    background: var(--background);
+    border: 1px solid var(--on-background);
+    border-radius: 10px;
+    padding: 1rem;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .report-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    border-color: #64748b;
+    filter: brightness(0.85);
+    box-shadow: 0 20px 4px rgba(var(--shadow) var(--shadow-alpha));
+    border-color: var(--outline);
+}
+
+.dark .report-card:hover {
+    transform: translateY(-4px);
+    filter: brightness(1.25);
+    box-shadow: 0 10px 20px rgba(var(--shadow) var(--shadow-alpha));
+    border-color: var(--outline);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 1rem;
+}
+
+h4 {
+    font-size: 1rem;
+    margin: 0;
+    margin-bottom: 0.5rem;
+    color: var(--on-background);
 }
 
 .type-badge {
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 9999px;
-    color: white;
+    color: var(--background);
     font-size: 0.8rem;
     font-weight: 600;
 }
 
 .status-badge {
     padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.82rem;
-    font-weight: 500;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
 .type-options {
@@ -779,16 +906,17 @@ function openReportModal() {
     padding: 8px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 9999px;
-    background: white;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    background: var(--surface);
+    color: var(--on-surface);
     transition: all 0.15s;
 }
 
 .type-btn.selected {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
+    background: var(--container);
+    color: var(--on-conatiner);
+    border-color: var(--container);
 }
 
 .other-input {
@@ -802,73 +930,118 @@ function openReportModal() {
     border-radius: 6px;
 }
 
+.severity {
+    margin: 0;
+    padding: 0;
+    color: var(--on-background);
+}
+
 .severity-options {
     display: flex;
-    gap: 12px;
-    margin: 8px 0;
+    flex-direction: row;
+    gap: 1rem;
+    margin: 0;
 }
 
 .severity-btn {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    background: white;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    background: var(--background);
     cursor: pointer;
     font-weight: 500;
-}
-
-.severity-btn.selected {
-    border-color: #3b82f6;
-    background: #eff6ff;
-    color: #1e40af;
-}
-
-.severity-btn input {
+    color: var(--on-background);
     margin: 0;
 }
 
-.status-badge.pending     { background: #fbbf24; color: #78350f; }
-.status-badge.in-progress { background: #60a5fa; color: white; }
-.status-badge.resolved    { background: #34d399; color: white; }
+.severity-btn.selected {
+    border-color: var(--on-container);
+    background: var(--container);
+    color: var(--on-container);
+}
+
+.severity-btn input[type="radio"] {
+    accent-color: var(--primary);
+}
+
+.status-badge.pending {
+    background: var(--pending);
+    color: var(--on-pending);
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge.in-progress {
+    background: var(--in-progress);
+    color: var(--on-in-progress);
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge.resolved {
+    background: var(--resolved);
+    color: var(--on-resolved);
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.card-bottom {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0;
+}
+
+.separator {
+    width: 100%;
+    height: 1px;
+    background-color: var(--on-background);
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    margin-bottom: 0.5rem;
+}
 
 .vote-section {
-    margin-top: 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 1rem;
     flex-wrap: wrap;
 }
 
 .vote-btn {
-    color: white;
+    width: 1rem;
+    background: none;
+    padding: 0;
+    margin: 0;
     border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-weight: 600;
     cursor: pointer;
+    color: var(--surface);
 }
 
-.upvote-btn {
-    background: #3b82f6;
-}
-
-.downvote-btn {
-    background: #ef4444;
+.upvote-img, .downvote-img {
+    height: 1rem;
+    width: auto;
 }
 
 .vote-count {
-    font-weight: 600;
-    color: #1e40af;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--on-background);
 }
 
 .timestamp {
-    color: #64748b;
-    font-size: 0.85rem;
-    display: block;
-    margin-top: 8px;
+    color: var(--on-surface);
+    font-size: 1rem;
+    display: flex;
 }
 
 .resolved-teaser {
@@ -885,73 +1058,102 @@ function openReportModal() {
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 1000;
+    padding: 3rem;
 }
 
 .modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    background: var(--background);
+    border-radius: 10px;
+    padding: 3rem;
+    width: 40rem;
+    height: auto;
+    overflow-y: auto;
+    box-shadow: 0 1rem 2rem rgba(var(--shadow), var(--shadow-alpha));
+    box-sizing: border-box;
+    max-height: 85vh;
 }
 
 .modal-content h3 {
-    margin: 0 0 20px;
-    color: #1e293b;
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    color: var(--on-background);
 }
 
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 1rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
     font-weight: 500;
-    color: #475569;
+    color: var(--on-background);
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    padding: 0.8rem;
+    border: 1px solid var(--outline);
+    border-radius: 10px;
     font-size: 1rem;
+    background: var(--background);
+    color: var(--on-background);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
+}
+
+#description {
+    resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.hint {
+    display: flex;
+    margin: 0;
+    margin-top: 0.5rem;
+    color: var(--on-background);
+    font-size: 0.8rem;
 }
 
 .form-actions {
     display: flex;
-    gap: 12px;
+    gap: 1rem;
     justify-content: flex-end;
-    margin-top: 24px;
+    margin: 0;
 }
 
 .cancel-btn {
-    background: #e2e8f0;
-    color: #475569;
+    background: var(--surface);
+    color: var(--on-surface);
     border: none;
-    padding: 10px 18px;
-    border-radius: 6px;
+    padding: 0.8rem;
+    border-radius: 10px;
     cursor: pointer;
 }
 
 .submit-btn {
-    background: #3b82f6;
-    color: white;
+    background: var(--container);
+    color: var(--on-container);
     border: none;
-    padding: 10px 18px;
-    border-radius: 6px;
+    padding: 0.8rem;
+    border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
 }
 
 .submit-btn:disabled {
-    background: #93c5fd;
+    background: var(--outline);
     cursor: not-allowed;
 }
 
