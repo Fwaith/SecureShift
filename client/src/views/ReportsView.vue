@@ -1020,7 +1020,7 @@ h4 {
 .vote-btn {
     width: 1rem;
     background: none;
-    padding: 0;
+    padding: 4px;
     margin: 0;
     border: none;
     cursor: pointer;
